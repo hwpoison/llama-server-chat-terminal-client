@@ -1,0 +1,1 @@
+cls && make && chat.exe --my-prompt daryl  --param-profile default --prompt-template nothing
