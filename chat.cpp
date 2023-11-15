@@ -372,7 +372,7 @@ int main(int argc, char* argv[]){
     std::vector<chat_entry_t> chatHistory;
     std::string userInput;
     std::string director_input;
-    std::save_folder = "saved_chats/";
+    std::string save_folder = "saved_chats/";
 
     user_settings.actor_list["narrator"] = {"Narrator", "narrator", "yellow"};
     user_settings.actor_list["director"] = {"Director", "director", "green_bc"};
