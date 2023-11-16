@@ -1,6 +1,6 @@
 #ifndef __COLORS__
 #define __COLORS__
-#include <map>
+#include <utility>
 #include <string>
 
 /* https://en.wikipedia.org/wiki/ANSI_escape_code */
@@ -17,15 +17,24 @@
 
 #define ANSI_COLOR_RESET "\e[0m"
 
-namespace ANSIColors { // change for var=key instead map
-	inline std::map<std::string, std::string> all = {
-		{"magenta" ,ANSI_MG_C},
-		{"red", ANSI_RED_C},
-		{"green", ANSI_GRN_C},
-		{"cyn", ANSI_CYN_C},
-		{"yellow", ANSI_YEL_C},
-		{"green_bc", ANSI_GREEN_BC}
-	};
+namespace ANSIColors {
+    inline const std::pair<std::string, std::string> all[] = {
+        {"magenta" , ANSI_MG_C},
+        {"pink" , ANSI_MG_C},
+        {"red", ANSI_RED_C},
+        {"green", ANSI_GRN_C},
+        {"cyn", ANSI_CYN_C},
+        {"yellow", ANSI_YEL_C},
+        {"green_bc", ANSI_GREEN_BC}
+    };
 
+    inline std::string getColorCode(const std::string& color) {
+        for (const auto& pair : all) {
+            if (pair.first == color) {
+                return pair.second;
+            }
+        }
+        return "";
+    }
 }
 #endif

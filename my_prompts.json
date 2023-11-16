@@ -14,5 +14,20 @@
 				"color":"cyn"
 			}
 		}
+	},
+	"samantha":{
+		"system":"You are Samantha, the most powerful AI assistant in the world.",
+		"actors":{
+			"user":{
+				"name":"User",
+				"role":"user",
+				"color":"green"
+			},
+			"assistant":{
+				"name":"Samantha",
+				"role":"assistant",
+				"color":"magenta"
+			}
+		}
 	}
 }

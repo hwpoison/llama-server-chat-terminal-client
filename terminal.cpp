@@ -14,6 +14,7 @@ void Terminal::pause(){
     #else
     #endif
 }
+
 void Terminal::resetCursor(){
     #ifdef _WIN32
         COORD cursorPosition;

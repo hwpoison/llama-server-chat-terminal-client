@@ -53,7 +53,6 @@ namespace simplejson {
                     (structure.*member).push_back(yyjson_get_str(hit));
             }
 
-
             template <typename T>
             void setMember(yyjson_val *doc, const char* key_name, T& structure, bool T::*member) {
                 yyjson_val *value = yyjson_obj_get(doc, key_name);

@@ -4,7 +4,6 @@
 #include <csignal>
 #include <filesystem>
 #include <fstream>
-#include <algorithm>
 #include <map>
 
 #include "utils.cpp"
@@ -76,7 +75,7 @@ struct actor_list_t {
     std::string actor_color;
 };
 
-struct UserContext {
+struct ChatContext {
     std::string system_prompt;
     std::map<std::string, actor_t> actor_list;
 };

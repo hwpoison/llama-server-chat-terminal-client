@@ -9,22 +9,22 @@ std::string craftToSendPrompt(std::vector<chat_entry_t> &vect, prompt_style_t &P
     std::string newString;
     for (const chat_entry_t& entry : vect){
         if(entry.actor->role == "user"){
-            newString+=PromptStyle.begin_user;
-            newString += entry.actor->name + ":";
-            newString += entry.message_content;
-            newString+=PromptStyle.end_user;
+            newString+= PromptStyle.begin_user;
+            newString+= entry.actor->name + ":";
+            newString+= entry.message_content;
+            newString+= PromptStyle.end_user;
         }else if(entry.actor->role == "system"){
-            newString+=PromptStyle.begin_system;
-            newString += entry.message_content;
-            newString+=PromptStyle.end_system;
+            newString+= PromptStyle.begin_system;
+            newString+= entry.message_content;
+            newString+= PromptStyle.end_system;
         }else if(entry.actor->role == "assistant"){
-            newString+=PromptStyle.begin_assistant;
-            newString += entry.actor->name + ":";
-            newString += entry.message_content;
-            newString+=PromptStyle.eos;
+            newString+= PromptStyle.begin_assistant;
+            newString+= entry.actor->name + ":";
+            newString+= entry.message_content;
+            newString+= PromptStyle.eos;
         }else{
-            newString+=entry.actor->name + ":";
-            newString+=entry.message_content; 
+            newString+= entry.actor->name + ":";
+            newString+= entry.message_content; 
         }
     }
     return newString;
@@ -79,31 +79,31 @@ bool completionCallback(const std::string& chunck) {
 std::string craftPayload(const parameters_t& params) {
     // We dont need create a mutable object if treats about a simple json
     std::string json = "{";
-    json += "\"stream\":"s +            (params.stream ? "true" : "false") + ",";
-    json += "\"mirostat\":" +           std::to_string(params.mirostat) + ",";
-    json += "\"mirostat_tau\":" +       std::to_string(params.mirostat_tau) + ",";
-    json += "\"mirostat_eta\":" +       std::to_string(params.mirostat_eta) + ",";
-    json += "\"frecuency_penalty\":" +  std::to_string(params.frecuency_penalty) + ",";
-    json += "\"n_probs\":" +            std::to_string(params.n_probs) + ",";
-    json += "\"grammar\":\"" +          params.grammar + "\",";
-    json += "\"presence_penalty\":" +   std::to_string(params.presence_penalty) + ",";
-    json += "\"top_k\":" +              std::to_string(params.top_k) + ",";
-    json += "\"top_p\":" +              std::to_string(params.top_p) + ",";
-    json += "\"typical_p\":" +          std::to_string(params.typical_p) + ",";
-    json += "\"tfz_z\":" +              std::to_string(params.tfz_z) + ",";
-    json += "\"repeat_last_n\":" +      std::to_string(params.repeat_last_n) + ",";
-    json += "\"repeat_penalty\":" +     std::to_string(params.repeat_penalty) + ",";
-    json += "\"temperature\":" +        std::to_string(params.temperature) + ",";
-    json += "\"n_predict\":" +          std::to_string(params.n_predict) + ",";
-    json += "\"stop\":[";
-    for (size_t i = 0; i < params.stop.size(); ++i) {
-        json += "\"" + params.stop[i] + "\"";
-        if (i < params.stop.size() - 1) {
-            json += ",";
+        json += "\"stream\":"s +            (params.stream ? "true" : "false") + ",";
+        json += "\"mirostat\":" +           std::to_string(params.mirostat) + ",";
+        json += "\"mirostat_tau\":" +       std::to_string(params.mirostat_tau) + ",";
+        json += "\"mirostat_eta\":" +       std::to_string(params.mirostat_eta) + ",";
+        json += "\"frecuency_penalty\":" +  std::to_string(params.frecuency_penalty) + ",";
+        json += "\"n_probs\":" +            std::to_string(params.n_probs) + ",";
+        json += "\"grammar\":\"" +          params.grammar + "\",";
+        json += "\"presence_penalty\":" +   std::to_string(params.presence_penalty) + ",";
+        json += "\"top_k\":" +              std::to_string(params.top_k) + ",";
+        json += "\"top_p\":" +              std::to_string(params.top_p) + ",";
+        json += "\"typical_p\":" +          std::to_string(params.typical_p) + ",";
+        json += "\"tfz_z\":" +              std::to_string(params.tfz_z) + ",";
+        json += "\"repeat_last_n\":" +      std::to_string(params.repeat_last_n) + ",";
+        json += "\"repeat_penalty\":" +     std::to_string(params.repeat_penalty) + ",";
+        json += "\"temperature\":" +        std::to_string(params.temperature) + ",";
+        json += "\"n_predict\":" +          std::to_string(params.n_predict) + ",";
+        json += "\"stop\":[";
+        for (size_t i = 0; i < params.stop.size(); ++i) {
+            json += "\"" + params.stop[i] + "\"";
+            if (i < params.stop.size() - 1) {
+                json += ",";
+            }
         }
-    }
-    json += "],";
-    json += "\"prompt\":\"" + normalizeText(params.prompt) + "\"";
+        json += "],";
+        json += "\"prompt\":\"" + normalizeText(params.prompt) + "\"";
     json += "}";
 
     return json;
@@ -135,7 +135,7 @@ parameters_t loadParametersSettings(const char* profile_name, const char* filena
     parameters.setMember(parameter_profile, "temperature",       Parameters, &parameters_t::temperature);
     parameters.setMember(parameter_profile, "n_predict",         Parameters, &parameters_t::n_predict);
     parameters.setMember(parameter_profile, "stream",            Parameters, &parameters_t::stream);
-    
+
     return Parameters;  
 }
 
@@ -146,8 +146,7 @@ void registerChatEntry(std::vector<chat_entry_t> &chatHistory, actor_t &actorInf
     chatHistory.push_back(newEntry);
 }
 
-bool loadSavedChat(std::string file_path, std::vector<chat_entry_t> &chatHistory, UserContext &settings){
-    // read
+bool loadSavedChat(std::string file_path, std::vector<chat_entry_t> &chatHistory, ChatContext &settings){
     cout << "Loaded " << endl;
     // Read JSON file, allowing comments and trailing commas
     yyjson_read_flag rflg = YYJSON_READ_ALLOW_COMMENTS | YYJSON_READ_ALLOW_TRAILING_COMMAS;
@@ -173,7 +172,7 @@ bool loadSavedChat(std::string file_path, std::vector<chat_entry_t> &chatHistory
                 newActor.name = actor_name;
                 newActor.tag_color = "blue";
                 newActor.role = role;
-                //registerChatEntry(chatHistory, newActor, content);
+                registerChatEntry(chatHistory, newActor, content);
             } 
         }
         return true;
@@ -209,46 +208,30 @@ void saveChatHistory(std::string filename, std::vector<chat_entry_t> &chatHistor
     yyjson_mut_doc_free(doc);
 }
 
-prompt_style_t loadPromptTemplates(const char* prompt_style_name, const char* filename){
-    // Load and setup prompt style profile
-
+prompt_style_t loadPromptTemplates(const char* prompt_style_name, const char* filename) {
     prompt_style_t PromptStyle;
-
-    const char* template_name = prompt_style_name;
     const char* key_name = "prompt_templates";
     simplejson::json template_base = simplejson::json(filename);
 
-    // PROMPT TYPE
-    const char* PROMPT_TYPE_[] = {key_name, template_name, "TYPE", "\0"};
+    const char* PROMPT_TYPE_[] = {key_name, prompt_style_name, "TYPE", "\0"};
     PromptStyle.prompt_type = template_base.get_str(PROMPT_TYPE_);
 
-    // BEGIN SYSTEM INSTRUCTION
-    const char* B_SYS_[] = {key_name, template_name, "SEQ", "B_SYS", "\0"};
-    PromptStyle.begin_system = template_base.get_str(B_SYS_);
-
-    // END SYSTEM INSTRUCTION
-    const char* E_SYS_[] = {key_name, template_name, "SEQ", "E_SYS", "\0"};
-    PromptStyle.end_system = template_base.get_str(E_SYS_);
-
-    // BEGIN USER INSTRUCTION
-    const char* B_USER_[] = {key_name, template_name, "SEQ", "B_USER", "\0"};
-    PromptStyle.begin_user = template_base.get_str(B_USER_);
-
-    const char* E_USER_[] = {key_name, template_name, "SEQ", "E_USER", "\0"};
-    PromptStyle.end_user = template_base.get_str(E_USER_);
-
-    // BEGIN ASSISTANT INSTRUCTION
-    const char* B_ASSISTANT_[] = {key_name, template_name, "SEQ", "B_ASSISTANT", "\0"};
-    PromptStyle.begin_assistant = template_base.get_str(B_ASSISTANT_);
-
-    const char* EOS_[] = {key_name, template_name, "SEQ", "EOS", "\0"};
-    PromptStyle.eos = template_base.get_str(EOS_);
+    const auto loadSeqToken = [&](const char* key, const char* field_key) {
+        const char* keys[] = {key_name, prompt_style_name, key, field_key, "\0"};
+        return template_base.get_str(keys);
+    };
+    PromptStyle.begin_system   = loadSeqToken("SEQ", "B_SYS");
+    PromptStyle.end_system     = loadSeqToken("SEQ", "E_SYS");
+    PromptStyle.begin_user     = loadSeqToken("SEQ", "B_USER");
+    PromptStyle.end_user       = loadSeqToken("SEQ", "E_USER");
+    PromptStyle.begin_assistant = loadSeqToken("SEQ", "B_ASSISTANT");
+    PromptStyle.eos            = loadSeqToken("SEQ", "EOS");
 
     return PromptStyle;
 }
 
-UserContext loadMyPromptSettings(const char* my_prompt_name, const char* filename){
-    UserContext user_settings;
+ChatContext loadMyPromptSettings(const char* my_prompt_name, const char* filename){
+    ChatContext chatContext;
 
     // open file
     yyjson_read_flag flg = YYJSON_READ_ALLOW_COMMENTS | YYJSON_READ_ALLOW_TRAILING_COMMAS;
@@ -259,8 +242,8 @@ UserContext loadMyPromptSettings(const char* my_prompt_name, const char* filenam
     yyjson_val *system = yyjson_obj_get(my_prompt, "system"); // daryl->system
 
     // load system prompt
-    user_settings.system_prompt = yyjson_get_str(system);
-    user_settings.actor_list["system"] = {"system", "System", "green_bc", "system"};
+    chatContext.system_prompt = yyjson_get_str(system);
+    chatContext.actor_list["system"] = {"system", "System", "green_bc", "system"};
 
     // load actors list
     yyjson_val *obj = yyjson_obj_get(my_prompt, "actors"); // daryl->actors
@@ -270,7 +253,7 @@ UserContext loadMyPromptSettings(const char* my_prompt_name, const char* filenam
         yyjson_val *key, *val;
         while ((key = yyjson_obj_iter_next(&iter))) {
             val = yyjson_obj_iter_get_val(key);
-            user_settings.actor_list[yyjson_get_str(key)] = {
+            chatContext.actor_list[yyjson_get_str(key)] = {
                 yyjson_get_str(key), // alias
                 yyjson_get_str(yyjson_obj_get(val, "name")), //name
                 yyjson_get_str(yyjson_obj_get(val, "color")),
@@ -279,23 +262,22 @@ UserContext loadMyPromptSettings(const char* my_prompt_name, const char* filenam
         }
     } else {
         printf("Failed to load the conversation. Read error (%u): %s at position: %ld\n", err.code, err.msg, err.pos);
-        std::system("pause");
+        Terminal::pause();
     }
 
-    return user_settings;
+    return chatContext;
 }
 
 
 void printActorTag(actor_t &actorInfo){
-    std::cout << ANSIColors::all[actorInfo.tag_color] << actorInfo.name + ":" << ANSI_COLOR_RESET;
+    std::cout << ANSIColors::getColorCode(actorInfo.tag_color) << actorInfo.name << ANSI_COLOR_RESET << ":" ;
 }
 
 bool popChatMessage(std::vector<chat_entry_t> &chatHistory, int num=1){
     if(chatHistory.size() == 2) { chatHistory.pop_back(); return true; };
     if(chatHistory.size() > 2){
-        for(int i=0; i < num;i++){
+        for(int i=0; i < num;i++)
             chatHistory.pop_back();
-        }
         return true;
     }
     return false;
@@ -304,17 +286,18 @@ bool popChatMessage(std::vector<chat_entry_t> &chatHistory, int num=1){
 void drawChatContent(std::vector<chat_entry_t> &chatHistory){
     Terminal::clear();
     for(const chat_entry_t& entry : chatHistory){
-        cout << ANSIColors::all[entry.actor->tag_color] << entry.actor->name << ANSI_COLOR_RESET << ":" << entry.message_content << endl;
-
+        printActorTag(*entry.actor);
+        cout<< entry.message_content << endl;
         if(entry.actor->role == "system")
             cout << endl;
     }
 }
 
-bool requestCompletion(parameters_t &Parameters, std::vector<chat_entry_t> &chatHistory) {
+bool requestCompletion(const char* endpoint_url, parameters_t &Parameters, std::vector<chat_entry_t> &chatHistory) {
+    Terminal::setTitle("Completing...");
     std::string json = craftPayload(Parameters);
     httpRequest Req;
-    Response res = Req.post("http://localhost:8080/completion", json.c_str(), completionCallback);
+    Response res = Req.post(endpoint_url, json.c_str(), completionCallback);
     
     if(res.Status != 200){
         if(res.Status == 500){
@@ -324,7 +307,7 @@ bool requestCompletion(parameters_t &Parameters, std::vector<chat_entry_t> &chat
             cout << ANSI_RED_BC << "[Error] Please check server connection and try again." << ANSI_COLOR_RESET << endl;
         }
         chatHistory.pop_back();
-        std::system("pause");
+        Terminal::pause();
         return false;
     }
 
@@ -341,15 +324,25 @@ int main(int argc, char* argv[]){
     std::string param_profile;
     std::string prompt_template;
     const char *input_arg = nullptr;
-    // Get args
-    if((input_arg = get_arg_value(argc, argv, "--my-prompt")) != NULL)
+
+    // Handle args
+    if((input_arg = get_arg_value(argc, argv, "--my-prompt")) != NULL){
         myprompt = input_arg;
+    }else{
+        myprompt = "samantha";
+    }
 
-    if((input_arg = get_arg_value(argc, argv, "--param-profile")) != NULL)
+    if((input_arg = get_arg_value(argc, argv, "--param-profile")) != NULL){
         param_profile = input_arg;
+    }else{
+        param_profile = "default";
+    }
 
-    if((input_arg = get_arg_value(argc, argv, "--prompt-template")) != NULL)
+    if((input_arg = get_arg_value(argc, argv, "--prompt-template")) != NULL){
         prompt_template = input_arg;
+    }else{
+        prompt_template = "empty";
+    }
 
     if((input_arg = get_arg_value(argc, argv, "--help")) != NULL){
         printCmdHelp();
@@ -362,10 +355,12 @@ int main(int argc, char* argv[]){
         exit(1);
     }
 
+    // Setup terminal behaviours
     Terminal::setupEncoding();
     signal(SIGINT, completionSignalHandler);
 
-    UserContext user_settings = loadMyPromptSettings(myprompt.c_str(), "my_prompts.json");
+    // Load params files
+    ChatContext chatContext = loadMyPromptSettings(myprompt.c_str(), "my_prompts.json");
     parameters_t Parameters = loadParametersSettings(param_profile.c_str(), "params.json");
     prompt_style_t PromptStyle = loadPromptTemplates(prompt_template.c_str(), "params.json");
 
@@ -373,23 +368,23 @@ int main(int argc, char* argv[]){
     std::string userInput;
     std::string director_input;
     std::string save_folder = "saved_chats/";
+    const char *endpoint_url = "http://localhost:8080/completion";
 
-    user_settings.actor_list["narrator"] = {"Narrator", "narrator", "yellow"};
-    user_settings.actor_list["director"] = {"Director", "director", "green_bc"};
+    chatContext.actor_list["narrator"] = {"Narrator", "narrator", "yellow"};
+    chatContext.actor_list["director"] = {"Director", "director", "green_bc"};
 
-    // Setup stop words (refactorize this disaster)
-    for (const auto& [key, value] : user_settings.actor_list){
+    // Setup stop sowrds
+    for (const auto& [key, value] : chatContext.actor_list){
         Parameters.stop.push_back(value.name + ":");
         Parameters.stop.push_back(toUpperCase(value.name + ":"));
     }
-    Parameters.stop.push_back(normalizeText(PromptStyle.eos));
     if(PromptStyle.begin_user != "")
         Parameters.stop.push_back(normalizeText(PromptStyle.begin_user));
     if(PromptStyle.end_user != "")
         Parameters.stop.push_back(normalizeText(PromptStyle.end_user));
 
     // Set up the system prompt
-    registerChatEntry(chatHistory, user_settings.actor_list["system"], user_settings.system_prompt);
+    registerChatEntry(chatHistory, chatContext.actor_list["system"], chatContext.system_prompt);
 
     completionStream = Parameters.stream;
 
@@ -400,13 +395,13 @@ int main(int argc, char* argv[]){
         completionBuffer = "";
         drawChatContent(chatHistory);
 
-        printActorTag(user_settings.actor_list["user"]);
+        printActorTag(chatContext.actor_list["user"]);
         std::getline(std::cin, userInput);
 
         // Check commands
         if(userInput[0] == '/'){
             size_t space = userInput.find(" ");
-            std::string cmd = "hhjhjhj";
+            std::string cmd = "";
             std::string arg = "";
             if(space != std::string::npos){
                 cmd = userInput.substr(0, space);
@@ -414,25 +409,25 @@ int main(int argc, char* argv[]){
             }else{
                 cmd = userInput;
             }
-            if(cmd == "/redrawChatContent")
+            if(cmd == "/redraw")
             {
                 Terminal::clear();
                 continue;
             // narrator mode, just generate the tag and wait for completion.
             }else if(cmd == "/narrator") 
             {  
-                printActorTag(user_settings.actor_list["narrator"]);
-                Parameters.prompt = craftToSendPrompt(chatHistory, PromptStyle) + user_settings.actor_list["narrator"].name + ":";
-                if(requestCompletion(Parameters, chatHistory)){
-                    registerChatEntry(chatHistory, user_settings.actor_list["narrator"], completionBuffer);
+                printActorTag(chatContext.actor_list["narrator"]);
+                Parameters.prompt = craftToSendPrompt(chatHistory, PromptStyle) + chatContext.actor_list["narrator"].name + ":";
+                if(requestCompletion(endpoint_url, Parameters, chatHistory)){
+                    registerChatEntry(chatHistory, chatContext.actor_list["narrator"], completionBuffer);
                 }
                 continue;
             // director mode, user can write what happens.
-            }else if(cmd == "/dir") 
+            }else if(cmd == "/director" || cmd == "dir") 
             {
-                printActorTag(user_settings.actor_list["director"]);
+                printActorTag(chatContext.actor_list["director"]);
                 std::getline(std::cin, director_input);
-                registerChatEntry(chatHistory, user_settings.actor_list["director"], director_input);
+                registerChatEntry(chatHistory, chatContext.actor_list["director"], director_input);
             // save chat in a .txt
             }else if(cmd == "/save") 
             {
@@ -446,7 +441,7 @@ int main(int argc, char* argv[]){
                 continue;
             }else if(cmd == "/load") 
             {
-                if(loadSavedChat(std::string(save_folder +  arg + ".json"), chatHistory, user_settings)){
+                if(loadSavedChat(std::string(save_folder +  arg + ".json"), chatHistory, chatContext)){
                     Terminal::setTitle("Loaded!");
                     Terminal::clear();
                     continue;
@@ -480,21 +475,21 @@ int main(int argc, char* argv[]){
             {
                 std:cout << "Current history:" << craftToSendPrompt(chatHistory, PromptStyle) << std::endl;
                 std::cout << " " << endl;
-                system("pause");
+           Terminal::pause();
                 continue;
             // show current prompt
             }else if(cmd == "/prompt") 
             {
                 std::cout << "Current prompt:" << Parameters.prompt << std::endl;
                 std::cout << " " << endl;
-                system("pause");
+           Terminal::pause();
                 continue;
             // list current parameters
             }else if(cmd == "/params") 
             {
                 std::cout << "Current params:" << craftPayload(Parameters) << std::endl;
                 std::cout << " " << endl;
-                system("pause");
+           Terminal::pause();
                 continue;
             // retry last completion
             }else if(cmd == "/retry" || cmd == "/r") 
@@ -509,15 +504,15 @@ int main(int argc, char* argv[]){
                 continue; 
             }
         }else{
-            registerChatEntry(chatHistory, user_settings.actor_list["user"], userInput);
+            registerChatEntry(chatHistory, chatContext.actor_list["user"], userInput);
         }
 
         // Default Assistant completion
-        printActorTag(user_settings.actor_list["assistant"]);
-        Parameters.prompt = craftToSendPrompt(chatHistory, PromptStyle) + user_settings.actor_list["assistant"].name + ":";
+        printActorTag(chatContext.actor_list["assistant"]);
+        Parameters.prompt = craftToSendPrompt(chatHistory, PromptStyle) + chatContext.actor_list["assistant"].name + ":";
 
-        if(requestCompletion(Parameters, chatHistory)){
-            registerChatEntry(chatHistory, user_settings.actor_list["assistant"], completionBuffer);
+        if(requestCompletion(endpoint_url, Parameters, chatHistory)){
+            registerChatEntry(chatHistory, chatContext.actor_list["assistant"], completionBuffer);
             cout << PromptStyle.eos;      
         }
     }

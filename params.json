@@ -1,6 +1,12 @@
 {
+///////////////////////////////////////////
+// All prompt templates
+///////////////////////////////////////////
+	"settings":{
+		"server_endpoint":"http://localhost:8080/completion"
+	},
 	"prompt_templates":{
-		"nothing":
+		"empty":
 		{
 			"TYPE":"chat",
 			"SEQ":{
@@ -48,7 +54,11 @@
 
 		}
 	},
-	// All profiles related to model parameters
+
+///////////////////////////////////////////
+// All profiles related to model parameters
+///////////////////////////////////////////
+
 	"params_profiles":{
 	    "default": {
 	        "mirostat": 0,
