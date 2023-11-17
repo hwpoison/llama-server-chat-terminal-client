@@ -1,16 +1,20 @@
 #include <iostream>
 #include <cstdint>
 #include <functional>
+#include <cstring>
 
 #ifdef __WIN32__
     #include <winsock2.h>
     #include <windows.h>
+    typedef SOCKET SocketType;
+    #define Socket_error SOCKET_ERROR
+    #define Invalid_socket INVALID_SOCKET
 #endif
 
 #include "logging.hpp"
 
 #define BUFFER_SIZE 5000        // BUG BUG fix for process responses with probs enables. Damn, this entire code is a bug xD
-typedef SOCKET SocketType;
+
 
 // JSON Type
 typedef std::string json;
@@ -76,7 +80,9 @@ public:
     bool        close_connection(SocketType connection);
     std::string resolveDomain(const char* domain);
     int         get_last_error();
+    void        clean_up();
+
     ~httpRequest() {
-        WSACleanup();
+       clean_up();
     }
 };

@@ -12,7 +12,10 @@
 #include "colors.h"
 #include "terminal.hpp"
 
-#include <windows.h>
+#ifdef __WIN32__
+    #include <windows.h>
+#endif
+
 #include <ctime>
 
 using namespace std;

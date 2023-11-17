@@ -9,15 +9,16 @@ httpRequest::httpRequest() {
     #endif
 };
 
-
 bool httpRequest::close_connection(SocketType connection) {
+    #ifdef __WIN32__
+        closesocket(connection);
+    #endif
     logging::info("Conection closed");
-    closesocket(connection);
     return true;
 };
 
 bool httpRequest::send_data(SocketType connection, const char *data) {
-    if (send(connection, data, strlen(data), 0) == SOCKET_ERROR) {
+    if (send(connection, data, strlen(data), 0) == Socket_error) {
         logging::error("send() SOCKET ERROR");
         // Al finalizar, verifica si hubo un error
         get_last_error();
@@ -30,20 +31,26 @@ bool httpRequest::send_data(SocketType connection, const char *data) {
 
 // http
 std::string httpRequest::resolveDomain(const char *domain) {
-    struct hostent *remoteHost;
-    struct in_addr addr;
-    std::string ip_address = "";
-    remoteHost = gethostbyname(domain);
-    int i = 0;
-    logging::info("Solving domain %s...", domain);
-    if (remoteHost->h_addrtype == AF_INET) {
-        while (remoteHost->h_addr_list[i] != 0) {
-            addr.s_addr = *(u_long *) remoteHost->h_addr_list[i++];
-            ip_address.assign(inet_ntoa(addr));
+    #ifdef __WIN32__
+        struct hostent *remoteHost;
+        struct in_addr addr;
+        std::string ip_address = "";
+        #ifdef __WIN32__
+            remoteHost = gethostbyname(domain);
+        #endif
+        int i = 0;
+        logging::info("Solving domain %s...", domain);
+        if (remoteHost->h_addrtype == AF_INET) {
+            while (remoteHost->h_addr_list[i] != 0) {
+                addr.s_addr = *(u_long *) remoteHost->h_addr_list[i++];
+                ip_address.assign(inet_ntoa(addr));
+            }
         }
-    }
-    logging::success("Solved: %s --> %s", domain, ip_address);
-    return ip_address;
+        logging::success("Solved: %s --> %s", domain, ip_address);
+        return ip_address;
+    #else
+        return domain;
+    #endif
 }
 
 Response httpRequest::post(const std::string url, json payload, const std::function<bool(std::string chunck)>&reader_callback = nullptr) {
@@ -102,24 +109,27 @@ Response httpRequest::post(const std::string url, json payload, const std::funct
         }
     };
 
-    if (bytesRead == SOCKET_ERROR)
+    if (bytesRead == Socket_error)
         logging::error("Error receiving data.");
-
+        
     return response;
 };
 
 
 SocketType httpRequest::connect_to(const char *domain, int16_t port) {
-    WSADATA wsaData;
-    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
-        logging::error("Error initializing winsock.");
-        return 1;
-    }
+    #ifdef __WIN32__
+        WSADATA wsaData;
+        if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+            logging::error("Error initializing winsock.");
+            return 1;
+        }
+    #endif
 
     SocketType clientSocket = socket(AF_INET, SOCK_STREAM, 0);
+
     if (clientSocket == INVALID_SOCKET) {
         logging::error("Error to create a socket.");
-        WSACleanup();
+        clean_up();
         return 1;
     }
 
@@ -129,11 +139,10 @@ SocketType httpRequest::connect_to(const char *domain, int16_t port) {
 
     std::string solved_domain = this->resolveDomain(domain);
     serverAddress.sin_addr.s_addr = inet_addr(solved_domain.c_str());
-    if (connect(clientSocket, (sockaddr*)&serverAddress, sizeof(serverAddress)) == SOCKET_ERROR) {
+    if (connect(clientSocket, (sockaddr*)&serverAddress, sizeof(serverAddress)) == Socket_error) {
         logging::error("Error connecting to the server.");
         get_last_error();
-        closesocket(clientSocket);
-        WSACleanup();
+        close_connection(clientSocket);
         return 1;
     }
     logging::success("Socket created.");
@@ -141,14 +150,22 @@ SocketType httpRequest::connect_to(const char *domain, int16_t port) {
 }
 
 int httpRequest::get_last_error(){
-    int errorCode = WSAGetLastError();
-    if (errorCode != 0) {
-        char errorBuffer[256];
-        if (FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, errorCode, 0, errorBuffer, sizeof(errorBuffer), NULL) != 0) {
-            logging::error("Error in Winsock:\nCode: %d \nMsg:%s", errorCode, errorBuffer);
-        } else {
-            logging::error("Error in Winsock with Code %d (Not possible get code description).", errorCode);
+    #ifdef __WIN32__
+        int errorCode = WSAGetLastError();
+        if (errorCode != 0) {
+            char errorBuffer[256];
+            if (FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, errorCode, 0, errorBuffer, sizeof(errorBuffer), NULL) != 0) {
+                logging::error("Error in Winsock:\nCode: %d \nMsg:%s", errorCode, errorBuffer);
+            } else {
+                logging::error("Error in Winsock with Code %d (Not possible get code description).", errorCode);
+            }
         }
-    }
-    return errorCode;
+        return errorCode;
+    #endif
+}
+
+void httpRequest::clean_up(){
+    #ifdef __WIN32__
+        WSACleanup();
+    #endif
 }

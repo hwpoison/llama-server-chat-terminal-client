@@ -473,7 +473,7 @@ int main(int argc, char* argv[]){
             // list all historial content
             }else if(cmd == "/history") 
             {
-                std:cout << "Current history:" << craftToSendPrompt(chatHistory, PromptStyle) << std::endl;
+                std::cout << "Current history:" << craftToSendPrompt(chatHistory, PromptStyle) << std::endl;
                 std::cout << " " << endl;
            Terminal::pause();
                 continue;

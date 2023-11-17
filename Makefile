@@ -1,10 +1,12 @@
 CC = g++
-CFLAGS = -Os -s -std=c++17
-LDFLAGS = -lws2_32
+CFLAGS = -std=c++17 -Os -s # -Wall
 
-chat: yyjson.o minipost.o terminal.o
-	$(CC) chat.cpp yyjson.o minipost.o terminal.o -o chat.exe $(CFLAGS) $(LDFLAGS) -fmerge-all-constants  -fno-exceptions -fno-rtti 
+LDFLAGS += -lws2_32 -Lyyjson
+
+chat: minipost.o terminal.o ./yyjson/src/yyjson.o
+	$(CC) chat.cpp minipost.o terminal.o ./yyjson/src/yyjson.o -o chat $(CFLAGS) $(LDFLAGS) -fmerge-all-constants  -fno-exceptions -fno-rtti 
 
 clean:
-	del *.o chat.exe
+	rm *.o chat.exe
 
+		
