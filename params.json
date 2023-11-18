@@ -1,10 +1,13 @@
 {
 ///////////////////////////////////////////
-// All prompt templates
+// Client settings
 ///////////////////////////////////////////
 	"settings":{
 		"server_endpoint":"http://localhost:8080/completion"
 	},
+///////////////////////////////////////////
+// All prompt templates
+///////////////////////////////////////////
 	"prompt_templates":{
 		"empty":
 		{
@@ -71,7 +74,7 @@
 	        "typical_p": 1,
 	        "tfz_z": 1,
 	        "n_probs":0,
-	        "grammar":"",
+	        "grammar":"", // "root ::= answer\nanswer ::= (Sunny. | Cloudy. | Rainy.)",
 	        "presence_penalty":0,
 	        "repeat_last_n": 256,
 	        "repeat_penalty": 1.18,

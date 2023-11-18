@@ -13,57 +13,26 @@ namespace simplejson {
 
             yyjson_doc*         open(const char* filename);
             static yyjson_doc*  read(const char* raw_json);
+            bool                is_opened();
             
             yyjson_val*         get_value(const char *keys[]);
             const char*         get_str(const char *keys[]);
             int64_t             get_int(const char *keys[]);
             bool                get_bool(const char *keys[]);
             double              get_real(const char *keys[]);
-            bool                is_opened();
-
+            
+            yyjson_doc*         get_current_doc();
+            yyjson_val*         get_current_root();
             const char*         get_type(const char *keys[]);
-
-            template <typename T>
-            void setMember(yyjson_val *doc, const char* key_name, T& structure, char* T::*member) {
-                yyjson_val *value = yyjson_obj_get(doc, key_name);
-                if(yyjson_is_str(value))
-                    structure.*member = (char*)yyjson_get_str(value);
-            }
-
-            template <typename T>
-            void setMember(yyjson_val *doc, const char* key_name, T& structure, int T::*member) {
-                yyjson_val *value = yyjson_obj_get(doc, key_name);
-                if(yyjson_is_int(value))
-                    structure.*member = yyjson_get_int(value);
-            }
-
-            template <typename T>
-            void setMember(yyjson_val *doc, const char* key_name, T& structure, float T::*member) {
-                yyjson_val *value = yyjson_obj_get(doc, key_name);
-                if(yyjson_is_real(value))
-                    structure.*member = yyjson_get_real(value);
-            }
-
-            template <typename T>
-            void setMember(yyjson_val *doc, const char* key_name, T& structure, std::vector<std::string> T::*member) {
-                yyjson_val *value = yyjson_obj_get(doc, key_name);
-                size_t idx, max;
-                yyjson_val *hit;
-                yyjson_arr_foreach(value, idx, max, hit)
-                    (structure.*member).push_back(yyjson_get_str(hit));
-            }
-
-            template <typename T>
-            void setMember(yyjson_val *doc, const char* key_name, T& structure, bool T::*member) {
-                yyjson_val *value = yyjson_obj_get(doc, key_name);
-                if(yyjson_is_bool(value))
-                    structure.*member = yyjson_get_bool(value);
-            }
-            ~json() { yyjson_doc_free(current_doc);}
-
-            yyjson_doc* getCurrentDoc(){
-                return current_doc;
-            }
+            
+            template <typename T> void set_to_member(yyjson_val *doc, const char* key_name, T& structure, char* T::*member);
+            template <typename T> void set_to_member(yyjson_val *doc, const char* key_name, T& structure, int T::*member);
+            template <typename T> void set_to_member(yyjson_val *doc, const char* key_name, T& structure, float T::*member);
+            template <typename T> void set_to_member(yyjson_val *doc, const char* key_name, T& structure, std::vector<std::string> T::*member);
+            template <typename T> void set_to_member(yyjson_val *doc, const char* key_name, T& structure, bool T::*member);
+            template <typename T> void set_to_member(yyjson_val *doc, const char* key_name, T& structure, std::string T::*member);
+            
+            ~json();
 
         private:
             std::string doc_filename;
@@ -102,14 +71,13 @@ namespace simplejson {
 
     yyjson_val* json::get_value(const char *keys[]) {
         yyjson_val *tmp = NULL;
-        for (int i = 0; keys[i] != "\0"; keys++) {
-            if (tmp == NULL) {
+        for (int i = 0; *keys[i] != '\0'; keys++) {
+            if (tmp == NULL)
                 tmp = yyjson_obj_get(current_doc_root, keys[i]);
-            } else {
+            else
                 tmp = yyjson_obj_get(tmp, keys[i]);
-            }
             if (tmp == NULL) {
-                std::cerr << "Error getting the value of \"" << keys[i] << "\" from \"" << doc_filename << "\"" << std::endl;
+                std::cerr << "Error getting the value \"" << keys[i] << "\" from \"" << doc_filename << "\"" << std::endl;
                 return NULL;
             }
         }
@@ -136,6 +104,14 @@ namespace simplejson {
         return yyjson_get_real(get_value(keys));
     }
 
+    yyjson_doc* json::get_current_doc(){
+        return current_doc;
+    }
+
+    yyjson_val* json::get_current_root(){
+        return current_doc_root;
+    }
+
     const char * json::get_type(const char *keys[]) {
         yyjson_val *value = get_value(keys);
         if (value) {
@@ -145,4 +121,51 @@ namespace simplejson {
             return NULL;
         }
     };
+
+    // set value to struct member
+    template <typename T>
+    void json::set_to_member(yyjson_val *doc, const char* key_name, T& structure, char* T::*member) {
+        yyjson_val *value = yyjson_obj_get(doc, key_name);
+        if(yyjson_is_str(value))
+            structure.*member = (char*)yyjson_get_str(value);
+    }
+
+    template <typename T>
+    void json::set_to_member(yyjson_val *doc, const char* key_name, T& structure, int T::*member) {
+        yyjson_val *value = yyjson_obj_get(doc, key_name);
+        if(yyjson_is_int(value))
+            structure.*member = yyjson_get_int(value);
+    }
+
+    template <typename T>
+    void json::set_to_member(yyjson_val *doc, const char* key_name, T& structure, float T::*member) {
+        yyjson_val *value = yyjson_obj_get(doc, key_name);
+        if(yyjson_is_real(value))
+            structure.*member = yyjson_get_real(value);
+    }
+
+    template <typename T>
+    void json::set_to_member(yyjson_val *doc, const char* key_name, T& structure, std::vector<std::string> T::*member) {
+        yyjson_val *value = yyjson_obj_get(doc, key_name);
+        size_t idx, max;
+        yyjson_val *hit;
+        yyjson_arr_foreach(value, idx, max, hit)
+            (structure.*member).push_back(yyjson_get_str(hit));
+    }
+
+    template <typename T>
+    void json::set_to_member(yyjson_val *doc, const char* key_name, T& structure, bool T::*member) {
+        yyjson_val *value = yyjson_obj_get(doc, key_name);
+        if(yyjson_is_bool(value))
+            structure.*member = yyjson_get_bool(value);
+    }
+
+    template <typename T>
+    void json::set_to_member(yyjson_val *doc, const char* key_name, T& structure, std::string T::*member) {
+        yyjson_val *value = yyjson_obj_get(doc, key_name);
+        if(yyjson_is_str(value))
+            structure.*member = yyjson_get_str(value);
+    }
+
+    json::~json() { yyjson_doc_free(current_doc);}
 };

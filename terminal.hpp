@@ -1,13 +1,14 @@
 #ifndef __TERMINAL__
 #define __TERMINAL__
 #include <iostream>
+
 #include "colors.h"
 #ifdef __WIN32__
- #include <windows.h>
+#include <windows.h>
 #endif
 
 class Terminal {
-   public:
+public:
     static void setTitle(std::string titleContent);
     static void resetColor();
     static void pause();

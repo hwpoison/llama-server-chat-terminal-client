@@ -10,10 +10,10 @@ Welcome to the llama.cpp server terminal client, a versatile chat-style interfac
 **params.json**  contains all definitions for prompt adjustements and prompt templates styles.
 
 #### Execultable Arguments:
- --my-prompt *prompt name*
- --param-profile* profile name*
- --prompt-template *prompt template*
-
+ --my-prompt *prompt name*           (default: default)
+ --param-profile* profile name*      (default: default)
+ --prompt-template *prompt template* (default: empty)
+ --url "htpp://....."                (default: "http://localhost:8080/completion")
 
 #### Command support:
 To input a command, simply insert `/*command*` followed by the desired command.
@@ -34,3 +34,11 @@ To input a command, simply insert `/*command*` followed by the desired command.
 - **quit / q:** Exit the program
 - **prompt:** Print the current prompt
 - **params:** Print the current parameters
+- **rparams** Reload current parameter profile
+- **rtemplate** Reload current template profile
+
+###Instructions to build
+
+    git submodule init
+    git submodule update
+    make
