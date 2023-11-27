@@ -19,16 +19,20 @@ Welcome to the llama.cpp server terminal client, a versatile chat-style interfac
 To input a command, simply insert `/*command*` followed by the desired command.
 
 ##### Command List:
-- **narrator:** Generate Narrator content.
+- **narrator:** Lets to narrator generate a narration.
 - **director:** Switch to director mode input.
-- **actor:** Create a new character into convesation. (ex: /actor Einstein).
-- **iam:** Prompt an actor from the conversation. (ex: /iam Einstein)
+- **actor:** Create a new character into convesation and lets it talks. (ex: /actor Einstein).
+- **iam:** Pretend to be an actor and prompt it. (ex: /iam Einstein)
+
+<br>
 
 - **retry / r:** Retry the last completion.
 - **continue:** Continue the completion without intervention. (The assistant will continue talking)
 - **undolast:** Undo only the last completion.
 - **undo / u:** Undo the last completion and user input.
 
+<br>
+  
 - **save (chatname):** Save the chat. (without extension)
 - **load (chatname):** Load a previously saved chat.
 - **redraw:** Redraw the chat content.
@@ -40,7 +44,7 @@ To input a command, simply insert `/*command*` followed by the desired command.
 - **rparams** Reload current parameter profile.
 - **rtemplate** Reload current template profile.
 
-###Instructions to build
+### Instructions to build
 
     git submodule init
     git submodule update
