@@ -54,8 +54,11 @@ std::string httpRequest::resolveDomain(const char *domain) {
 }
 
 Response httpRequest::post(
-  const std::string url, json payload,
-  const std::function<bool(std::string chunck)> &reader_callback = nullptr) {
+        const std::string url, json payload,
+        const std::function<bool(std::string chunck, const CallbackBus *bus)> 
+        &reader_callback = nullptr, 
+        const CallbackBus *bus=nullptr)
+{
   if (!debug) {
     logging::disable_msg();
   }
@@ -105,7 +108,7 @@ Response httpRequest::post(
     response.body.assign(buffer, bytesRead);
 
     if (reader_callback != nullptr) {
-      if (!reader_callback(response.body)) break;
+      if (!reader_callback(response.body, bus)) break;
     }
   };
 

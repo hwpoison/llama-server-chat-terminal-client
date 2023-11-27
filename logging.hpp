@@ -17,12 +17,12 @@
 
 namespace logging {
 
-static uint8_t ERROR_LVL = 1 << 0;
-static uint8_t SUCCESS_LVL = 1 << 1;
-static uint8_t DEBUG_LVL = 1 << 2;
-static uint8_t WARN_LVL = 1 << 3;
+static uint8_t ERROR_LVL =    1 << 0;
+static uint8_t SUCCESS_LVL =  1 << 1;
+static uint8_t DEBUG_LVL =    1 << 2;
+static uint8_t WARN_LVL =     1 << 3;
 static uint8_t CRITICAL_LVL = 1 << 4;
-static uint8_t INFO_LVL = 1 << 5;
+static uint8_t INFO_LVL =     1 << 5;
 
 static short unsigned int SAVED_LOG_LEVEL = 0;
 static short unsigned int LOG_LEVEL =

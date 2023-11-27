@@ -1,6 +1,4 @@
-#include <iostream>
-#include <cstring>
-#include <algorithm>
+#include "utils.hpp"
 
 std::string normalizeText(const std::string& text) {
     std::string result = text;

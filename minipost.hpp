@@ -13,7 +13,7 @@ typedef SOCKET SocketType;
 
 #include "logging.hpp"
 
-#define BUFFER_SIZE 5000
+#define BUFFER_SIZE 500000
 
 // JSON Type
 typedef std::string json;
@@ -21,6 +21,12 @@ typedef std::string json;
 struct Response {
   int16_t Status = -1;
   std::string body = "";
+};
+
+struct CallbackBus {
+  std::string buffer;
+  bool stream;
+  bool stopCompletion;
 };
 
 class URLParser {
@@ -62,7 +68,8 @@ public:
   httpRequest();
   // http requests
   Response post(const std::string url, json payload,
-                const std::function<bool(std::string chunck)>& reader_callback);
+                const std::function<bool(std::string chunck, const CallbackBus *bus)> &reader_callback, 
+                const CallbackBus *bus);
 
   // TODO: socket (separate it)
   bool debug = false;

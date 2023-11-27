@@ -1,11 +1,5 @@
 {
 ///////////////////////////////////////////
-// Client settings
-///////////////////////////////////////////
-	"settings":{
-		"server_endpoint":"http://localhost:8080/completion"
-	},
-///////////////////////////////////////////
 // All prompt templates
 ///////////////////////////////////////////
 	"prompt_templates":{
@@ -63,7 +57,7 @@
 ///////////////////////////////////////////
 
 	"params_profiles":{
-	    "default": {
+	    "default": { // for chat
 	        "mirostat": 0,
 	        "mirostat_tau": 5,
 	        "mirostat_eta": 0.1,
@@ -79,10 +73,10 @@
 	        "repeat_last_n": 256,
 	        "repeat_penalty": 1.18,
 	        "temperature": 0.7,
-	        "n_predict": 200,
+	        "n_predict": 120,
 	        "stream": true
 	    },
-	    "ajuste2": {
+	    "without_stream": {
 	        "mirostat": 2,
 	        "mirostat_tau": 5,
 	        "mirostat_eta": 0.1,
@@ -99,5 +93,3 @@
 	    }
 	}
 }
-
-
