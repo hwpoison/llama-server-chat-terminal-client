@@ -35,9 +35,7 @@ std::string httpRequest::resolveDomain(const char *domain) {
   struct hostent *remoteHost;
   struct in_addr addr;
   std::string ip_address = "";
-#ifdef __WIN32__
   remoteHost = gethostbyname(domain);
-#endif
   int i = 0;
   logging::info("Solving domain %s...", domain);
   if (remoteHost->h_addrtype == AF_INET) {

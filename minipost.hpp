@@ -13,7 +13,7 @@ typedef SOCKET SocketType;
 
 #include "logging.hpp"
 
-#define BUFFER_SIZE 500000
+#define BUFFER_SIZE 500000 // 500kb
 
 // JSON Type
 typedef std::string json;

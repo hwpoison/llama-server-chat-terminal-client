@@ -25,6 +25,12 @@ std::string toUpperCase(const std::string& input) {
     return result;
 }
 
+std::string toLowerCase(const std::string& input) {
+    std::string result = input;
+    std::transform(result.begin(), result.end(), result.begin(), ::tolower);
+    return result;
+}
+
 const std::string getDate() {
     time_t     now = time(0);
     struct tm  tstruct;

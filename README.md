@@ -21,8 +21,9 @@ To input a command, simply insert `/*command*` followed by the desired command.
 ##### Command List:
 - **narrator:** Lets to narrator generate a narration.
 - **director:** Switch to director mode input.
-- **actor:** Create a new character into convesation and lets it talks. (ex: /actor Einstein).
-- **iam:** Pretend to be an actor and prompt it. (ex: /iam Einstein)
+- **actor:** Create a new character or use an existent into convesation and lets it talks. (ex: /actor Einstein).
+- **as:** Pretend to be an actor and prompt it. (ex: /as Einstein)
+- **talkto:** Talk to a determinated character. It will swtich the current talking actor. (ex: /talkto Monica)
 
 <br>
 

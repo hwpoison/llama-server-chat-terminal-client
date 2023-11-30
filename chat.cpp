@@ -1,5 +1,6 @@
 #include "chat.hpp"
 
+
 int main(int argc, char *argv[]) {
     std::string myprompt;
     std::string endpoint_url;
@@ -45,7 +46,9 @@ int main(int argc, char *argv[]) {
 
     // Setup terminal behaviours
     Terminal::setupEncoding();
-    
+    signal(SIGINT, completionSignalHandler);
+
+
     Chat chatContext;
     chatContext.loadUserPromptProfile(myprompt.c_str());
     chatContext.loadPromptTemplates(prompt_template_profile.c_str());
@@ -56,21 +59,32 @@ int main(int argc, char *argv[]) {
     std::string director_input;
     std::string save_folder = "saved_chats/";
 
-    signal(SIGINT, chatContext.completionSignalHandler);
+    
 
     // Initialize narrator and director actors
-    chatContext.addNewActor({"Narrator", "yellow", "narrator"});
-    chatContext.addNewActor({"Director", "yellow", "director"});
+    chatContext.addNewActor("Narrator", "system", "yellow");
+    chatContext.addNewActor("Director", "system", "yellow");
 
     // Set up the system prompt
-    chatContext.addNewMessage("system", chatContext.getPromptSystem()+"\n");
+    chatContext.addNewMessage("System", chatContext.getSystemPrompt());
 
     Terminal::resetColor();
     Terminal::clear();
 
+    bool onceTime = false;
+    std::string previousActingActor;
+    std::string currentActingActor = chatContext.getAssistantName();
+
     while (true) {
         chatContext.completionBuffer.buffer = "";
         chatContext.draw();
+
+        if(onceTime){
+            currentActingActor = previousActingActor;
+            onceTime = false;
+        }else{
+            previousActingActor = currentActingActor;
+        }
 
         // User input
         chatContext.printActorChaTag(chatContext.getUserName());
@@ -91,48 +105,48 @@ int main(int argc, char *argv[]) {
             if (cmd == "/redraw") {
                 Terminal::clear();
                 continue;
+
                 // custom actor 
             } else if (cmd == "/actor" || cmd == "/a") {
-                chatContext.addNewActor((actor_t){arg, ANSIColors::getRandColor(), "actor"});
-                chatContext.printActorChaTag(arg.c_str());
-                chatContext.setPrompt(chatContext.craftChatPromp());
-                chatContext.addPrompt(arg + ":");
-                if (chatContext.requestCompletion())
-                    chatContext.addNewMessage(arg.c_str(), chatContext.completionBuffer.buffer);
-                continue;
-            } else if (cmd == "/iam") {
-                chatContext.addNewActor((actor_t){arg, ANSIColors::getRandColor(), "actor"});
-                chatContext.printActorChaTag(arg.c_str());
+                chatContext.addNewActor(arg, "actor", ANSIColors::getRandColor());
+                currentActingActor = arg;
+                
+                // act like an actor
+            } else if (cmd == "/as") {
+                chatContext.addNewActor(arg, "actor", ANSIColors::getRandColor());
+                chatContext.printActorChaTag(arg);
                 std::getline(std::cin, director_input);
-                chatContext.addNewMessage(arg.c_str(), director_input);
+                chatContext.addNewMessage(arg, director_input);
+
+                // talk to an specific actor
+            } else if (cmd == "/talkto") {
+                chatContext.addNewActor(arg, "actor", ANSIColors::getRandColor());
+                chatContext.printActorChaTag(chatContext.getUserName());
+                std::getline(std::cin, director_input);
+                chatContext.addNewMessage(chatContext.getUserName(), director_input);
+                currentActingActor = arg;
+
                 // lets narrator describes the context
             } else if (cmd == "/narrator") {
-                chatContext.printActorChaTag("Narrator");
-                chatContext.setPrompt(chatContext.craftChatPromp());
-                chatContext.addPrompt(std::string("Narrator")+":");
+                currentActingActor = "Narrator";
+                onceTime = true;
 
-                if (chatContext.requestCompletion()) {
-                    chatContext.addNewMessage("Narrator", chatContext.completionBuffer.buffer);
-                    cout << endl; // chage by eos!
-                }else{
-                    chatContext.removeMessage();
-                }
-                continue;
                 // as director you can put your prompt
             } else if (cmd == "/director" || cmd == "dir") {
                 chatContext.printActorChaTag("Director");
                 std::getline(std::cin, director_input);
-                chatContext.addNewMessage("director", director_input);
-                // save chat in a .txt
+                chatContext.addNewMessage("Director", director_input);
+
+                // save chat in a .json
             } else if (cmd == "/save") {
                 if (!arg.empty())
                     chatContext.saveConversation(std::string(save_folder + arg + ".json"));
                 else
                     chatContext.saveConversation(std::string(save_folder + "/chat_" + getDate() + ".json"));
-
                 Terminal::setTitle("Saved!");
                 Terminal::clear();
                 continue;
+                // load from json
             } else if (cmd == "/load") {
                 if (chatContext.loadSavedConversation(std::string(save_folder + arg + ".json"))) {
                     Terminal::setTitle("Conversation loaded!");
@@ -143,46 +157,56 @@ int main(int argc, char *argv[]) {
                     Terminal::pause();
                     continue;
                 }
+
                 // undo only last message
             } else if (cmd == "/undolast") {
-                chatContext.removeMessage(1);
+                chatContext.removeLastMessage(1);
                 continue;
+
                 // undo last completion and user message
             } else if (cmd == "/undo" || cmd == "/u") {
-                chatContext.removeMessage(2);
+                chatContext.removeLastMessage(2);
                 continue;
+
                 // reset all chat historial
             } else if (cmd == "/reset") {
                 chatContext.resetChatHistory();
+                currentActingActor = chatContext.getAssistantName();
                 continue;
+
                 // exit from program
             } else if (cmd == "/quit" || cmd == "/q") {
                 exit(0);
+
             } else if (cmd == "/history") {
                 std::cout << "Current history:"
-                          << chatContext.craftChatPromp()
+                          << chatContext.composeChatPrompt()
                           << std::endl;
                 std::cout << " " << endl;
                 Terminal::pause();
                 continue;
+
                 // show current prompt
             } else if (cmd == "/lprompt") {
-                std::cout << "Current prompt:" << chatContext.getCurrentPrompt()
+                std::cout << "Current prompt:" << chatContext.composeChatPrompt()
                           << std::endl;
                 std::cout << " " << endl;
                 Terminal::pause();
                 continue;
+
                 // list current parameters
             } else if (cmd == "/lparams") {
-                std::cout << "Current params:" << chatContext.jsonPayload() << std::endl;
+                std::cout << "Current params:" << chatContext.dumpJsonPayload() << std::endl;
                 std::cout << " " << endl;
                 Terminal::pause();
                 continue;
+
             // view actors 
             } else if (cmd == "/lactors") {
                 chatContext.listCurrentActors();
                 Terminal::pause();
                 continue;
+
                 // reload params from file
             } else if (cmd == "/rparams") {
                 std::string prevPrompt = chatContext.getPrompt();
@@ -191,15 +215,18 @@ int main(int argc, char *argv[]) {
                 chatContext.setPrompt(prevPrompt);
                 Terminal::setTitle("Params reloaded");
                 continue;
+
             } else if (cmd == "/rtemplate") {
                 chatContext.loadPromptTemplates(prompt_template_profile.c_str());
                 // setupChatGuards(chatContext);
                 Terminal::setTitle("Template reloaded");
                 continue;
+
                 // retry last completion
             } else if (cmd == "/retry" || cmd == "/r") {
-                chatContext.removeMessage(1);
+                chatContext.removeLastMessage(1);
                 chatContext.draw();
+
             } else if (cmd == "/continue") {
                 // ...
 
@@ -211,16 +238,14 @@ int main(int argc, char *argv[]) {
             chatContext.addNewMessage(chatContext.getUserName(), userInput);
         }
 
-        // Default Assistant completion
-        chatContext.printActorChaTag(chatContext.getAssistantName());
-        chatContext.setPrompt(chatContext.craftChatPromp());
-        chatContext.addPrompt(std::string(chatContext.getAssistantName()) + ":");
-
+        // Start to composing the prompt
+        chatContext.printActorChaTag(currentActingActor);
+        chatContext.generateChatPrompt(currentActingActor);
         if (chatContext.requestCompletion()) {
-            chatContext.addNewMessage(chatContext.getAssistantName(), chatContext.completionBuffer.buffer);
-            cout << endl; // chage by eos!
+            chatContext.addNewMessage(currentActingActor, chatContext.completionBuffer.buffer);
+            cout << endl;
         }else{
-            chatContext.removeMessage();
+            chatContext.removeLastMessage();
         }
     }
 

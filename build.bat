@@ -1,1 +1,1 @@
-cls && make && chat.exe --my-prompt daryl  --param-profile default --prompt-template empty
+cls && make && chat.exe --my-prompt samantha  --param-profile default --prompt-template mistral_ggml

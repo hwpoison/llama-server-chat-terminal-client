@@ -74,7 +74,8 @@
 	        "repeat_penalty": 1.18,
 	        "temperature": 0.7,
 	        "n_predict": 120,
-	        "stream": true
+	        "stream": true,
+	        "slot_id":0
 	    },
 	    "without_stream": {
 	        "mirostat": 2,

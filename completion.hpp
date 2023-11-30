@@ -3,7 +3,8 @@
 
 #include <iostream>
 #include <string>
-#include <csignal>
+#include <signal.h>
+#include <atomic>
 
 #include "sjson.hpp"
 #include "utils.hpp"
@@ -11,8 +12,9 @@
 #include "terminal.hpp"
 
 #define DEFAULT_COMPLETION_ENDPOINT "http://localhost:8080/completion"
+#define PARAMS_FILENAME "params.json"
 
-static bool stopCompletion = false;
+extern std::atomic<bool> stopCompletionFlag;
 
 struct parameters_t {
     int mirostat = 0;
@@ -22,24 +24,33 @@ struct parameters_t {
     int n_probs = 0;
     int presence_penalty = 0;
     int top_k = 40;
-    float top_p = 0.5;
+    float top_p = 0.95;
+    float min_p = 0.05;
     int typical_p = 1;
     int tfz_z = 1;
     int repeat_last_n = 256;
     float repeat_penalty = 1.18;
-    int slot_id = -1;
+    int slot_id = 0;
     float temperature = 0.8;
     int n_predict = 100;
     bool stream = true;
+    bool ignore_eos = false;
+    bool penalize_nl = true;
     std::vector<std::string> stop;
     std::string grammar = "";
     std::string prompt;
 };
 
+static void completionSignalHandler(int signum) {
+    stopCompletionFlag =  true;
+    //signal(SIGINT, SIG_DFL);
+}
+
 static bool completionCallback(const std::string &chunck, const CallbackBus *bus) {
-    if (stopCompletion) {
+    if (stopCompletionFlag) {
         std::cout << std::endl << "Completion stopped by the user!..." << std::endl;
-        stopCompletion = false;
+        Terminal::pause();
+        stopCompletionFlag = false;
         return false;
     }
 
@@ -56,7 +67,7 @@ static bool completionCallback(const std::string &chunck, const CallbackBus *bus
 
     // Parse result
     sjson result(sjson::read(completionData.c_str()));
-
+    
     // Check std::end of completion
     const char *content_[] = {"content", "\0"};
     const char *end_of_c[] = {"stop", "\0"};
@@ -86,7 +97,7 @@ public:
 
     void loadParametersSettings(const char *profile_name);
 
-    std::string jsonPayload();
+    std::string dumpJsonPayload();
 
     bool requestCompletion();
 
@@ -100,11 +111,6 @@ public:
     std::string getCurrentPrompt();
 
     void addStopWord(std::string word);
-
-    static void completionSignalHandler(int signum) {
-        stopCompletion = false;
-        signal(SIGINT, SIG_DFL);
-    }
 
     CallbackBus completionBuffer = {"", true, false};
 private:

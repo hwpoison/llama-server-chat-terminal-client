@@ -1,7 +1,9 @@
+#ifndef __CHAT_H__
+#define __CHAT_H__
 #include <iostream>
 #include <string>
 #include <vector>
-#include <csignal>
+#include <signal.h>
 #include <filesystem>
 #include <fstream>
 #include <algorithm>
@@ -12,10 +14,6 @@
 #include "colors.h"
 
 using namespace std;
-
-bool stopCompletionFlag = false;
-bool completionStream = true;
-std::string completionBuffer;
 
 //////////////////////////////////////////////
 
@@ -34,8 +32,8 @@ struct prompt_template_t {
 
 struct actor_t {
     std::string name;
-    std::string tag_color;
     std::string role;
+    std::string tag_color;
 };
 
 struct chat_entry_t {
@@ -53,9 +51,15 @@ class Chat : public Completion {
 public:
     Chat(){};
 
-    void addNewMessage(const char* actor_name, std::string content) {
-        if(actors.find(actor_name) == actors.end()){ // if doest not exists
-            addNewActor((actor_t){actor_name, ANSIColors::getRandColor() , "actor"});
+    bool actorExists(std::string actor_name){
+        if(actors.find(actor_name) != actors.end()) // if doest not exists
+            return true;
+        return false;
+    }
+
+    void addNewMessage(std::string actor_name, std::string content) {
+        if(actorExists(actor_name)){ // if doest not exists
+            addNewActor(actor_name, "actor", ANSIColors::getRandColor());
         }
         chat_entry_t newEntry;
         newEntry.actor_name = actor_name;
@@ -63,19 +67,19 @@ public:
         history.push_back(newEntry);
     }
 
-    bool removeMessage(int num = 1) {
+    bool removeLastMessage(int nmessages = 1) {
         if (history.size() == 2) {
             history.pop_back();
             return true;
         };
         if (history.size() > 2) {
-            for (int i = 0; i < num; i++) history.pop_back();
+            for (int i = 0; i < nmessages; i++) history.pop_back();
             return true;
         }
         return false;
     }
 
-    std::string craftChatPromp() {
+    std::string composeChatPrompt() {
         std::string newPrompt;
         for (const chat_entry_t &entry : history) {
             actor_t actor = actors[entry.actor_name];
@@ -86,19 +90,36 @@ public:
                 newPrompt += prompt_template.end_user;
             } else if (actor.role == "system") {
                 newPrompt += prompt_template.begin_system;
+                if(actor.name!="System")
+                    newPrompt += actor.name + ":";
                 newPrompt += entry.message_content;
                 newPrompt += prompt_template.end_system;
-            } else if (actor.role == "assistant") {
+            }else{
                 newPrompt += prompt_template.begin_assistant;
                 newPrompt += actor.name + ":";
                 newPrompt += entry.message_content;
                 newPrompt += prompt_template.eos;
-            } else {
-                newPrompt += actor.name + ":";
-                newPrompt += entry.message_content;
             }
         }
         return newPrompt;
+    }
+
+    void generateChatPrompt(std::string actor_name) {
+        std::string begin;
+        actor_t actor = actors[actor_name];
+        if (actor.role == "user") {
+            begin += prompt_template.begin_user;
+            begin += actor.name + ":";
+            begin += prompt_template.end_user;
+        } else if (actor.role == "system") {
+            begin += prompt_template.begin_system;
+            begin += actor.name + ":";
+        } else {
+            begin += prompt_template.begin_assistant;
+            begin += actor.name + ":";
+        }
+        setPrompt(composeChatPrompt());
+        addPrompt(begin);
     }
 
     void resetChatHistory(){
@@ -111,7 +132,8 @@ public:
         for (const chat_entry_t &entry : history) {
             printActorChaTag(entry.actor_name.c_str());
             cout << entry.message_content << endl;
-            if (actors[entry.actor_name].role == "system") cout << endl;
+            if (actors[entry.actor_name].name == "System")
+                cout << endl << endl;
         }
     }
 
@@ -123,7 +145,7 @@ public:
 
         // load system prompt and register system actor
         system_prompt = yyjson_get_str(system);
-        addNewActor((actor_t){"System", "green_bc", "system"});
+        addNewActor("System", "system", "green_ul");
         
 
         // load actors list
@@ -142,7 +164,7 @@ public:
                     const char *name_str = yyjson_get_str(name);
                     const char *role_str = yyjson_get_str(role);
                     const char *color_str = yyjson_get_str(color);
-                    addNewActor((actor_t){name_str, color_str, role_str});
+                    addNewActor(name_str, role_str, color_str);
 
                     if(!strcmp(role_str,"user")){
                         user_name = name_str;
@@ -170,7 +192,7 @@ public:
             if (actors.find(name_str) != actors.end()) {
                 addNewMessage(name_str, content);
             } else {
-                addNewActor((actor_t){name_str, ANSIColors::getRandColor(), role_str});
+                addNewActor(name_str, role_str, ANSIColors::getRandColor());
                 addNewMessage(name_str, content);
             }
             if(!strcmp(role_str, "user")){
@@ -234,18 +256,20 @@ public:
         prompt_template = promptTemplate;
     }
 
-    void printActorChaTag(const char* actor_name) {
+    void printActorChaTag(std::string actor_name) {
         actor_t actor = actors[actor_name];
         std::cout << ANSIColors::getColorCode(actor.tag_color) << actor.name
                   << ANSI_COLOR_RESET << ":";
     }
 
-    bool addNewActor(actor_t actorInfo){
-        if(actors.find(actorInfo.name) != actors.end())
+    bool addNewActor(std::string name, const char* role, const char* tag_color){
+        if(actors.find(name) != actors.end())
             return false;
-        actors[actorInfo.name] = actorInfo;
-        addStopWord(actorInfo.name + ":");
-        addStopWord(toUpperCase(actorInfo.name + ":"));
+        actor_t newActor = { name, role, tag_color };
+        actors[newActor.name] = newActor;
+        addStopWord(newActor.name + ":");
+        addStopWord(toUpperCase(newActor.name + ":"));
+        addStopWord(toLowerCase(newActor.name + ":"));
         return true;
     }
 
@@ -253,7 +277,7 @@ public:
         return actors[actor_name];
     }
 
-    std::string getPromptSystem(){
+    std::string getSystemPrompt(){
         return system_prompt;
     }
 
@@ -267,15 +291,24 @@ public:
 
     void setupStopWords(){
         // add chat guards
-        for (const auto &[key, value] : actors) {
-            addStopWord(value.name + ":");
-            addStopWord(toUpperCase(value.name + ":"));
+        for (const auto &[key, actor] : actors) {
+            addStopWord(actor.name + ":");
+            addStopWord(toUpperCase(actor.name + ":"));
+            addStopWord(toLowerCase(actor.name + ":"));
         }
 
         if (prompt_template.begin_user != "")
             addStopWord(normalizeText(prompt_template.begin_user));
         if (prompt_template.end_user != "")
             addStopWord(normalizeText(prompt_template.end_user));
+
+        if (prompt_template.begin_system != "")
+            addStopWord(normalizeText(prompt_template.begin_system));
+        if (prompt_template.end_system != "")
+            addStopWord(normalizeText(prompt_template.end_system));
+
+        if (prompt_template.end_system != "")
+            addStopWord(normalizeText(prompt_template.eos));
     }
 
     void listCurrentActors(){
@@ -293,3 +326,4 @@ private:
     actor_list_t actors;
     chat_history_t history;
 };
+#endif

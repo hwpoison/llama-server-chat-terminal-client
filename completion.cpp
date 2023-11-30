@@ -1,8 +1,10 @@
 #include "completion.hpp"
 
+std::atomic<bool> stopCompletionFlag(false);
+
 void Completion::loadParametersSettings(const char *profile_name) {
     // Retrieve parsed parameters from parameters.json
-    sjson parameters = sjson("params.json");
+    sjson parameters = sjson(PARAMS_FILENAME);
 
     // Choice the profile entry and work with it
     const char *PARAMETER_PROFILE_[] = {"params_profiles", profile_name, "\0"};
@@ -23,21 +25,25 @@ void Completion::loadParametersSettings(const char *profile_name) {
     parameters.set_to_member(parameter_profile, "tfz_z",              Parameters,     &parameters_t::tfz_z);
     parameters.set_to_member(parameter_profile, "repeat_last_n",      Parameters,     &parameters_t::repeat_last_n);
     parameters.set_to_member(parameter_profile, "repeat_penalty",     Parameters,     &parameters_t::repeat_penalty);
+    parameters.set_to_member(parameter_profile, "min_p",              Parameters,     &parameters_t::min_p);
     parameters.set_to_member(parameter_profile, "slot_id",            Parameters,     &parameters_t::slot_id); // add
     parameters.set_to_member(parameter_profile, "temperature",        Parameters,     &parameters_t::temperature);
     parameters.set_to_member(parameter_profile, "n_predict",          Parameters,     &parameters_t::n_predict);
     parameters.set_to_member(parameter_profile, "stream",             Parameters,     &parameters_t::stream);
+    parameters.set_to_member(parameter_profile, "ignore_eos",         Parameters,     &parameters_t::ignore_eos);
+    parameters.set_to_member(parameter_profile, "penalize_nl",        Parameters,    &parameters_t::penalize_nl);
 
     completionBuffer.stream = Parameters.stream;
 
     this->parameters = Parameters;
 }
 
-std::string Completion::jsonPayload() { // converts parameters_t to json string to sent
+std::string Completion::dumpJsonPayload() { // converts parameters_t to json string to sent
     // We dont need create a mutable object if treats about a simple json
     std::string json = "{";
     std::string is_stream = parameters.stream ? "true" : "false";
     json += std::string("\"stream\":") +  is_stream + ",";
+    json += "\"slot_id\":" +       std::to_string(parameters.slot_id) + ",";
     json += "\"mirostat\":" +       std::to_string(parameters.mirostat) + ",";
     json += "\"mirostat_tau\":" +   std::to_string(parameters.mirostat_tau) + ",";
     json += "\"mirostat_eta\":" +   std::to_string(parameters.mirostat_eta) + ",";
@@ -71,16 +77,16 @@ std::string Completion::jsonPayload() { // converts parameters_t to json string 
 
 bool Completion::requestCompletion() {
     Terminal::setTitle("Completing...");
-    std::string json = jsonPayload();
+    std::string json = dumpJsonPayload();
     httpRequest Req;
     Response res = Req.post(endpoint_url, json.c_str(), completionCallback, &completionBuffer);
     if (res.Status != 200) {
         if (res.Status == 500) {
             std::cout << std::endl << json << std::endl;
-            std::cout << ANSI_RED_BC << "[Error] Server Internal error."
+            std::cout << REDB << "[Error] Server Internal error."
                  << ANSI_COLOR_RESET << std::endl;
         } else {
-            std::cout << ANSI_RED_BC
+            std::cout << REDB
                  << "[Error] Please check server connection and try again."
                  << ANSI_COLOR_RESET << std::endl;
         }
@@ -111,4 +117,3 @@ std::string Completion::getCurrentPrompt(){
 void Completion::addStopWord(std::string word){
     parameters.stop.push_back(word);
 }
-
