@@ -1,18 +1,17 @@
 #include "chat.hpp"
 
-
 int main(int argc, char *argv[]) {
-    std::string myprompt;
-    std::string endpoint_url;
-    const char* param_profile = nullptr;
+    std::string my_prompt_profile;
     std::string prompt_template_profile;
+    std::string completion_url;
+    const char* param_profile = nullptr;
     const char *input_arg = nullptr;
-
+    
     // Handle args
     if ((input_arg = get_arg_value(argc, argv, "--my-prompt")) != NULL) {
-        myprompt = input_arg;
+        my_prompt_profile = input_arg;
     } else {
-        myprompt = "samantha";
+        my_prompt_profile = "samantha";
     }
 
     if ((input_arg = get_arg_value(argc, argv, "--param-profile")) != NULL) {
@@ -28,9 +27,9 @@ int main(int argc, char *argv[]) {
     }
 
     if ((input_arg = get_arg_value(argc, argv, "--url")) != NULL) {
-        endpoint_url = input_arg;
+        completion_url = input_arg;
     } else {
-        endpoint_url = DEFAULT_COMPLETION_ENDPOINT;
+        completion_url = DEFAULT_COMPLETION_ENDPOINT;
     }
 
     if ((input_arg = get_arg_value(argc, argv, "--help")) != NULL) {
@@ -38,7 +37,7 @@ int main(int argc, char *argv[]) {
         exit(0);
     }
 
-    if (myprompt.empty() || !param_profile || prompt_template_profile.empty()) {
+    if (my_prompt_profile.empty() || !param_profile || prompt_template_profile.empty()) {
         cout << "Wrong params" << endl;
         printCmdHelp();
         exit(1);
@@ -48,9 +47,8 @@ int main(int argc, char *argv[]) {
     Terminal::setupEncoding();
     signal(SIGINT, completionSignalHandler);
 
-
     Chat chatContext;
-    chatContext.loadUserPromptProfile(myprompt.c_str());
+    chatContext.loadUserPromptProfile(my_prompt_profile.c_str());
     chatContext.loadPromptTemplates(prompt_template_profile.c_str());
     chatContext.loadParametersSettings(param_profile);
     chatContext.setupStopWords();
@@ -58,8 +56,6 @@ int main(int argc, char *argv[]) {
     std::string userInput;
     std::string director_input;
     std::string save_folder = "saved_chats/";
-
-    
 
     // Initialize narrator and director actors
     chatContext.addNewActor("Narrator", "system", "yellow");
@@ -241,7 +237,7 @@ int main(int argc, char *argv[]) {
         // Start to composing the prompt
         chatContext.printActorChaTag(currentActingActor);
         chatContext.generateChatPrompt(currentActingActor);
-        if (chatContext.requestCompletion()) {
+        if (chatContext.requestCompletion(completion_url)) {
             chatContext.addNewMessage(currentActingActor, chatContext.completionBuffer.buffer);
             cout << endl;
         }else{

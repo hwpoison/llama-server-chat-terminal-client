@@ -8,5 +8,3 @@ chat: minipost.o terminal.o completion.o sjson.o utils.o ./yyjson/src/yyjson.o
 
 clean:
 	del *.o chat.exe
-
-		

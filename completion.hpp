@@ -99,7 +99,7 @@ public:
 
     std::string dumpJsonPayload();
 
-    bool requestCompletion();
+    bool requestCompletion(std::string endpoit_url);
 
     void setPrompt(std::string content);
 
@@ -114,7 +114,6 @@ public:
 
     CallbackBus completionBuffer = {"", true, false};
 private:
-    std::string endpoint_url = DEFAULT_COMPLETION_ENDPOINT;
     parameters_t parameters;
 };
 #endif

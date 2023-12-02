@@ -75,7 +75,7 @@ std::string Completion::dumpJsonPayload() { // converts parameters_t to json str
     return json;
 }
 
-bool Completion::requestCompletion() {
+bool Completion::requestCompletion(std::string endpoint_url=DEFAULT_COMPLETION_ENDPOINT) {
     Terminal::setTitle("Completing...");
     std::string json = dumpJsonPayload();
     httpRequest Req;

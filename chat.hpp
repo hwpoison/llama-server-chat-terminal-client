@@ -189,7 +189,7 @@ public:
             const char *name_str = yyjson_get_str(yyjson_obj_get(hit, "actor_name"));
             const char *role_str = yyjson_get_str(yyjson_obj_get(hit, "role"));
             const char *content = yyjson_get_str(yyjson_obj_get(hit, "content"));
-            if (actors.find(name_str) != actors.end()) {
+            if (actorExists(name_str)) {
                 addNewMessage(name_str, content);
             } else {
                 addNewActor(name_str, role_str, ANSIColors::getRandColor());

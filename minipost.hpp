@@ -13,7 +13,7 @@ typedef SOCKET SocketType;
 
 #include "logging.hpp"
 
-#define BUFFER_SIZE 500000 // 500kb
+#define BUFFER_SIZE 50000 // 50kb
 
 // JSON Type
 typedef std::string json;
@@ -66,10 +66,10 @@ private:
 class httpRequest {
 public:
   httpRequest();
-  // http requests
+  // post http request by callback for data stream
   Response post(const std::string url, json payload,
                 const std::function<bool(std::string chunck, const CallbackBus *bus)> &reader_callback, 
-                const CallbackBus *bus);
+                const CallbackBus *bus);  
 
   // TODO: socket (separate it)
   bool debug = false;
