@@ -20,11 +20,11 @@
 			"TYPE":"chat",
 			"SEQ":{
 				"B_SYS":		"<|im_start|>system\n",
-				"E_SYS":		"<|im_end|>\n",
+				"E_SYS":		"<|im_end|>",
 				"B_USER":		"<|im_start|>user\n",
-				"E_USER":		"<|im_end|>\n",
+				"E_USER":		"<|im_end|>",
 				"B_ASSISTANT":	"<|im_start|>assistant\n",
-				"EOS":			"<|im_end|>\n"
+				"EOS":			"<|im_end|>"
 			}
 		},
 		
@@ -64,7 +64,7 @@
 	        "frecuency_penalty": 0,
 	        "top_k": 40,
 	        "top_p": 0.5,
-	        "stop":["</s>"],
+	        "stop":["</s>", "<|"],
 	        "typical_p": 1,
 	        "tfz_z": 1,
 	        "n_probs":0,

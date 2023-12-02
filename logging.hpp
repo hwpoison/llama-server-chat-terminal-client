@@ -37,40 +37,40 @@ static void enable_msg() { LOG_LEVEL = SAVED_LOG_LEVEL; }
 
 static void error(const char* msg, ...) {
   if (LOG_LEVEL & ERROR_LVL) {
-    fprintf(stderr, "%s ", RED "[ERR]" ANSI_COLOR_RESET);
+    fprintf(stderr, "%s ", RED "[ERR] " ANSI_COLOR_RESET);
     PRINT_VAR_ARGS(msg, msg);
   }
 }
 
 static void success(const char* msg, ...) {
   if (LOG_LEVEL & SUCCESS_LVL) {
-    printf("%s", GRN "[SUCESS]" ANSI_COLOR_RESET);
+    printf("%s", GRN "[SUCESS] " ANSI_COLOR_RESET);
     PRINT_VAR_ARGS(msg, msg);
   }
 }
 
 static void info(const char* msg, ...) {
   if (LOG_LEVEL & SUCCESS_LVL) {
-    printf("%s", CYN "[INFO]" ANSI_COLOR_RESET);
+    printf("%s", CYN "[INFO] " ANSI_COLOR_RESET);
     PRINT_VAR_ARGS(msg, msg);
   }
 }
 
 static void debug(const char* msg, ...) {
   if (LOG_LEVEL & DEBUG_LVL) {
-    printf("%s", MAG "[DEBUG]" ANSI_COLOR_RESET);
+    printf("%s", MAG "[DEBUG] " ANSI_COLOR_RESET);
     PRINT_VAR_ARGS(msg, msg);
   }
 }
 static void warn(const char* msg, ...) {
   if (LOG_LEVEL & WARN_LVL) {
-    printf("%s", YEL "[WARN]" ANSI_COLOR_RESET);
+    printf("%s", YEL "[WARN] " ANSI_COLOR_RESET);
     PRINT_VAR_ARGS(msg, msg);
   }
 }
 static void critical(const char* msg, ...) {
   if (LOG_LEVEL & CRITICAL_LVL) {
-    printf("%s", RED "[CRITICAL]" ANSI_COLOR_RESET);
+    printf("%s", RED "[CRITICAL] " ANSI_COLOR_RESET);
     PRINT_VAR_ARGS(msg, msg);
   }
 }

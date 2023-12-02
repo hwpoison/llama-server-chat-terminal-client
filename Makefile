@@ -1,12 +1,19 @@
 CC = g++
-CFLAGS = -std=c++17 -s -Os #-g #-Os -s
+CFLAGS = -std=c++17 -Os -s -fmerge-all-constants  -fno-exceptions -fno-rtti
+LDFLAGS += -Lyyjson
+OBJECTS := minipost.o terminal.o completion.o sjson.o utils.o ./yyjson/src/yyjson.o
 
-LDFLAGS += -lws2_32 -Lyyjson
+ifeq ($(OS),Windows_NT)
+	LDFLAGS += -lws2_32
+	CLEAN_COMMAND := del /F /Q
+	YYJSON_SRC_DIR=yyjson\\src\\
+else
+	CLEAN_COMMAND := rm -f
+	YYJSON_SRC_DIR=yyjson/src/
+endif
 
-chat: minipost.o terminal.o completion.o sjson.o utils.o ./yyjson/src/yyjson.o
-	$(CC) chat.cpp minipost.o terminal.o completion.o sjson.o utils.o ./yyjson/src/yyjson.o -o chat $(CFLAGS) $(LDFLAGS) -fmerge-all-constants  -fno-exceptions -fno-rtti  
+chat: $(OBJECTS)
+	$(CC) chat.cpp $(OBJECTS) -o chat $(CFLAGS) $(LDFLAGS) $(DFLAGS)
 
 clean:
-	del *.o chat.exe
-
-		
+	$(CLEAN_COMMAND) *.o $(YYJSON_SRC_DIR)*.o chat.exe

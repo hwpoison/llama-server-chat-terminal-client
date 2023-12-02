@@ -12,7 +12,9 @@
 #include "sjson.hpp" 
 #include "completion.hpp"
 #include "colors.h"
+#include "logging.hpp"
 
+#define DEFAULT_FILE_EXTENSION ".json"
 using namespace std;
 
 //////////////////////////////////////////////
@@ -58,9 +60,6 @@ public:
     }
 
     void addNewMessage(std::string actor_name, std::string content) {
-        if(actorExists(actor_name)){ // if doest not exists
-            addNewActor(actor_name, "actor", ANSIColors::getRandColor());
-        }
         chat_entry_t newEntry;
         newEntry.actor_name = actor_name;
         newEntry.message_content = content;
@@ -77,6 +76,16 @@ public:
             return true;
         }
         return false;
+    }
+
+    // delete double breakline and space at the start
+    void cureCompletionForChat(){
+        if(guards){
+            completionBuffer.buffer.erase(0, completionBuffer.buffer.find_first_not_of(" "));
+            while (!completionBuffer.buffer.empty() && completionBuffer.buffer.back() == '\n') {
+                completionBuffer.buffer.erase(completionBuffer.buffer.size() - 1);
+            }
+        }
     }
 
     std::string composeChatPrompt() {
@@ -104,7 +113,8 @@ public:
         return newPrompt;
     }
 
-    void generateChatPrompt(std::string actor_name) {
+    void generateChatPrompt(std::string actor_name) {  
+        createActor(actor_name, "actor", ANSIColors::getRandColor());
         std::string begin;
         actor_t actor = actors[actor_name];
         if (actor.role == "user") {
@@ -131,27 +141,27 @@ public:
         Terminal::clear();
         for (const chat_entry_t &entry : history) {
             printActorChaTag(entry.actor_name.c_str());
-            cout << entry.message_content << endl;
+            cout << entry.message_content << "\n";
             if (actors[entry.actor_name].name == "System")
-                cout << endl << endl;
+                cout << "\n";
         }
     }
 
     void loadUserPromptProfile(const char *prompt_name) {
         sjson prompt_file = sjson("my_prompts.json");
-        yyjson_val *my_prompt =
-            yyjson_obj_get(prompt_file.get_current_root(), prompt_name);  // daryl
+        
+        const char* prompt_[] = {prompt_name, "\0"}; // file -> daryl
+        yyjson_val *my_prompt = prompt_file.get_value(prompt_);
         yyjson_val *system = yyjson_obj_get(my_prompt, "system");  // daryl->system
 
         // load system prompt and register system actor
         system_prompt = yyjson_get_str(system);
-        addNewActor("System", "system", "green_ul");
+        createActor("System", "system", "green_ul");
         
-
         // load actors list
         yyjson_val *actors = yyjson_obj_get(my_prompt, "actors");  // daryl->actors
         size_t actor_count = yyjson_arr_size(actors);
-        cout << actor_count << endl;
+        cout << actor_count << "\n";
 
         for (size_t i = 0; i < actor_count; ++i) {
             yyjson_val *actor = yyjson_arr_get(actors, i);
@@ -164,8 +174,7 @@ public:
                     const char *name_str = yyjson_get_str(name);
                     const char *role_str = yyjson_get_str(role);
                     const char *color_str = yyjson_get_str(color);
-                    addNewActor(name_str, role_str, color_str);
-
+                    createActor(name_str, role_str, color_str);
                     if(!strcmp(role_str,"user")){
                         user_name = name_str;
                     }else if(!strcmp(role_str,"assistant")){
@@ -189,12 +198,9 @@ public:
             const char *name_str = yyjson_get_str(yyjson_obj_get(hit, "actor_name"));
             const char *role_str = yyjson_get_str(yyjson_obj_get(hit, "role"));
             const char *content = yyjson_get_str(yyjson_obj_get(hit, "content"));
-            if (actors.find(name_str) != actors.end()) {
-                addNewMessage(name_str, content);
-            } else {
-                addNewActor(name_str, role_str, ANSIColors::getRandColor());
-                addNewMessage(name_str, content);
-            }
+
+            createActor(name_str, role_str, ANSIColors::getRandColor());
+            addNewMessage(name_str, content);
             if(!strcmp(role_str, "user")){
                 user_name = name_str;
             }else if(!strcmp(role_str,"assistant")){
@@ -229,7 +235,8 @@ public:
         yyjson_write_err err;
         yyjson_mut_write_file(filename.c_str(), doc, flg, NULL, &err);
         if (err.code) {
-            printf("write error (%u): %s\n", err.code, err.msg);
+            logging::error("Problem saving the conversation file \"%s\": %s", filename, err.msg);
+            Terminal::pause();
         }
         yyjson_mut_doc_free(doc);
     }
@@ -262,14 +269,19 @@ public:
                   << ANSI_COLOR_RESET << ":";
     }
 
-    bool addNewActor(std::string name, const char* role, const char* tag_color){
-        if(actors.find(name) != actors.end())
+    void addActorStopWords(std::string actor_name){
+        addStopWord(actor_name + ":");
+        addStopWord(toUpperCase(actor_name + ":"));
+        addStopWord(toLowerCase(actor_name + ":"));
+    }
+
+    bool createActor(std::string name, const char* role, const char* tag_color){
+        if(actorExists(name)){
             return false;
+        }
         actor_t newActor = { name, role, tag_color };
         actors[newActor.name] = newActor;
-        addStopWord(newActor.name + ":");
-        addStopWord(toUpperCase(newActor.name + ":"));
-        addStopWord(toLowerCase(newActor.name + ":"));
+        if(guards) addActorStopWords(name);
         return true;
     }
 
@@ -281,41 +293,45 @@ public:
         return system_prompt;
     }
 
-    const char* getUserName(){
-        return user_name.c_str();
+    std::string& getUserName(){
+        return user_name;
     }
 
-    const char* getAssistantName(){
-        return assistant_name.c_str();
+    std::string& getAssistantName(){
+        return assistant_name;
+    }
+
+    void removeAllActors(){
+        actors.clear();
     }
 
     void setupStopWords(){
-        // add chat guards
+        // add chat guards, all possible variations of stop words expected for a 
+        // chat scheme conversation
         for (const auto &[key, actor] : actors) {
-            addStopWord(actor.name + ":");
-            addStopWord(toUpperCase(actor.name + ":"));
-            addStopWord(toLowerCase(actor.name + ":"));
+            addActorStopWords(actor.name);
         }
 
-        if (prompt_template.begin_user != "")
-            addStopWord(normalizeText(prompt_template.begin_user));
-        if (prompt_template.end_user != "")
-            addStopWord(normalizeText(prompt_template.end_user));
+        auto addStop = [this](std::string token) {
+            if(token==""){}else{
+                if(token!="\n") addStopWord(normalizeText(token));
+            }
+        };
 
-        if (prompt_template.begin_system != "")
-            addStopWord(normalizeText(prompt_template.begin_system));
-        if (prompt_template.end_system != "")
-            addStopWord(normalizeText(prompt_template.end_system));
-
-        if (prompt_template.end_system != "")
-            addStopWord(normalizeText(prompt_template.eos));
+        addStop(prompt_template.begin_user);
+        addStop(prompt_template.end_user);
+        addStop(prompt_template.begin_system);
+        addStop(prompt_template.end_system);
+        addStop(prompt_template.eos);
     }
 
     void listCurrentActors(){
         for (const auto &[key, value] : actors) {
-            std::cout << key << std::endl;
+            std::cout << key << "\n";
         }
     }
+
+    bool guards = true;
 
 private:
     std::string user_name;
@@ -323,7 +339,9 @@ private:
 
     std::string system_prompt;
     prompt_template_t prompt_template;
+    
     actor_list_t actors;
     chat_history_t history;
+
 };
 #endif

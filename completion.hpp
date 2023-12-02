@@ -4,17 +4,18 @@
 #include <iostream>
 #include <string>
 #include <signal.h>
-#include <atomic>
 
 #include "sjson.hpp"
 #include "utils.hpp"
 #include "minipost.hpp"
 #include "terminal.hpp"
 
-#define DEFAULT_COMPLETION_ENDPOINT "http://localhost:8080/completion"
+#define DEFAULT_IP "127.0.0.1"
+#define DEFAULT_PORT 8080
+#define DEFAULT_COMPLETION_ENDPOINT "/completion"
 #define PARAMS_FILENAME "params.json"
 
-extern std::atomic<bool> stopCompletionFlag;
+extern bool stopCompletionFlag;
 
 struct parameters_t {
     int mirostat = 0;
@@ -43,7 +44,7 @@ struct parameters_t {
 
 static void completionSignalHandler(int signum) {
     stopCompletionFlag =  true;
-    //signal(SIGINT, SIG_DFL);
+    signal(SIGINT, SIG_DFL);
 }
 
 static bool completionCallback(const std::string &chunck, const CallbackBus *bus) {
@@ -87,7 +88,9 @@ static bool completionCallback(const std::string &chunck, const CallbackBus *bus
         Terminal::setTitle(windowTitle);
         return false;
     }
-    std::cout << token;  // write the token in terminal
+
+    std::cout << token << std::flush;  // write the token in terminal
+
     const_cast<CallbackBus*>(bus)->buffer+=token;
     return true;
 }
@@ -99,22 +102,20 @@ public:
 
     std::string dumpJsonPayload();
 
-    bool requestCompletion();
+    Response requestCompletion(const char* ipaddr, const char* completion_endpoint, const int16_t port);
 
     void setPrompt(std::string content);
 
     void addPrompt(std::string content);
 
-    std::string getPrompt(){
-        return parameters.prompt;
-    }
-    std::string getCurrentPrompt();
+    std::string getPrompt();
 
     void addStopWord(std::string word);
 
-    CallbackBus completionBuffer = {"", true, false};
+    CallbackBus completionBuffer = {"", true};
+
 private:
-    std::string endpoint_url = DEFAULT_COMPLETION_ENDPOINT;
+    httpRequest Req;
     parameters_t parameters;
 };
 #endif

@@ -1,69 +1,56 @@
 #include "chat.hpp"
 
-
 int main(int argc, char *argv[]) {
-    std::string myprompt;
-    std::string endpoint_url;
-    const char* param_profile = nullptr;
-    std::string prompt_template_profile;
+    const char* my_prompt_profile = "samantha";
+    const char* prompt_template_profile = "empty";
+    const char* ipaddr = DEFAULT_IP;
+    const char* param_profile = "default";
     const char *input_arg = nullptr;
-
+    bool chat_guards = true;
+    int16_t port = DEFAULT_PORT;
+    
     // Handle args
-    if ((input_arg = get_arg_value(argc, argv, "--my-prompt")) != NULL) {
-        myprompt = input_arg;
-    } else {
-        myprompt = "samantha";
-    }
+    if ((input_arg = get_arg_value(argc, argv, "--my-prompt")) != NULL)
+        my_prompt_profile = input_arg;
 
-    if ((input_arg = get_arg_value(argc, argv, "--param-profile")) != NULL) {
+    if ((input_arg = get_arg_value(argc, argv, "--param-profile")) != NULL)
         param_profile = input_arg;
-    } else {
-        param_profile = "default";
-    }
 
-    if ((input_arg = get_arg_value(argc, argv, "--prompt-template")) != NULL) {
+    if ((input_arg = get_arg_value(argc, argv, "--prompt-template")) != NULL)
         prompt_template_profile = input_arg;
-    } else {
-        prompt_template_profile = "empty";
-    }
 
-    if ((input_arg = get_arg_value(argc, argv, "--url")) != NULL) {
-        endpoint_url = input_arg;
-    } else {
-        endpoint_url = DEFAULT_COMPLETION_ENDPOINT;
-    }
+    if ((input_arg = get_arg_value(argc, argv, "--ip")) != NULL)
+        ipaddr = input_arg;
+
+    if ((input_arg = get_arg_value(argc, argv, "--port")) != NULL)
+        port = std::stoi(input_arg);
+
+    if ((input_arg = get_arg_value(argc, argv, "--no-guards")) != NULL)
+        chat_guards = false;
 
     if ((input_arg = get_arg_value(argc, argv, "--help")) != NULL) {
         printCmdHelp();
         exit(0);
     }
-
-    if (myprompt.empty() || !param_profile || prompt_template_profile.empty()) {
-        cout << "Wrong params" << endl;
-        printCmdHelp();
-        exit(1);
-    }
-
+    
     // Setup terminal behaviours
     Terminal::setupEncoding();
     signal(SIGINT, completionSignalHandler);
 
-
     Chat chatContext;
-    chatContext.loadUserPromptProfile(myprompt.c_str());
-    chatContext.loadPromptTemplates(prompt_template_profile.c_str());
+    chatContext.guards = chat_guards;
+    chatContext.loadUserPromptProfile(my_prompt_profile);
+    chatContext.loadPromptTemplates(prompt_template_profile);
     chatContext.loadParametersSettings(param_profile);
-    chatContext.setupStopWords();
+    if(chat_guards) chatContext.setupStopWords();
 
     std::string userInput;
     std::string director_input;
     std::string save_folder = "saved_chats/";
 
-    
-
-    // Initialize narrator and director actors
-    chatContext.addNewActor("Narrator", "system", "yellow");
-    chatContext.addNewActor("Director", "system", "yellow");
+    // Create the director and narrator actors
+    chatContext.createActor("Director", "system", "yellow");
+    chatContext.createActor("Narrator", "system", "yellow");
 
     // Set up the system prompt
     chatContext.addNewMessage("System", chatContext.getSystemPrompt());
@@ -71,7 +58,7 @@ int main(int argc, char *argv[]) {
     Terminal::resetColor();
     Terminal::clear();
 
-    bool onceTime = false;
+    bool onceAct = false;
     std::string previousActingActor;
     std::string currentActingActor = chatContext.getAssistantName();
 
@@ -79,9 +66,9 @@ int main(int argc, char *argv[]) {
         chatContext.completionBuffer.buffer = "";
         chatContext.draw();
 
-        if(onceTime){
+        if(onceAct){
             currentActingActor = previousActingActor;
-            onceTime = false;
+            onceAct = false;
         }else{
             previousActingActor = currentActingActor;
         }
@@ -108,19 +95,19 @@ int main(int argc, char *argv[]) {
 
                 // custom actor 
             } else if (cmd == "/actor" || cmd == "/a") {
-                chatContext.addNewActor(arg, "actor", ANSIColors::getRandColor());
+                chatContext.createActor(arg, "actor", ANSIColors::getRandColor());
                 currentActingActor = arg;
                 
                 // act like an actor
             } else if (cmd == "/as") {
-                chatContext.addNewActor(arg, "actor", ANSIColors::getRandColor());
+                chatContext.createActor(arg, "actor", ANSIColors::getRandColor());
                 chatContext.printActorChaTag(arg);
                 std::getline(std::cin, director_input);
                 chatContext.addNewMessage(arg, director_input);
 
                 // talk to an specific actor
             } else if (cmd == "/talkto") {
-                chatContext.addNewActor(arg, "actor", ANSIColors::getRandColor());
+                chatContext.createActor(arg, "actor", ANSIColors::getRandColor());
                 chatContext.printActorChaTag(chatContext.getUserName());
                 std::getline(std::cin, director_input);
                 chatContext.addNewMessage(chatContext.getUserName(), director_input);
@@ -129,32 +116,34 @@ int main(int argc, char *argv[]) {
                 // lets narrator describes the context
             } else if (cmd == "/narrator") {
                 currentActingActor = "Narrator";
-                onceTime = true;
+                onceAct = true;
 
                 // as director you can put your prompt
             } else if (cmd == "/director" || cmd == "dir") {
+                
                 chatContext.printActorChaTag("Director");
                 std::getline(std::cin, director_input);
                 chatContext.addNewMessage("Director", director_input);
 
-                // save chat in a .json
+                // save chat in a file
             } else if (cmd == "/save") {
-                if (!arg.empty())
-                    chatContext.saveConversation(std::string(save_folder + arg + ".json"));
-                else
-                    chatContext.saveConversation(std::string(save_folder + "/chat_" + getDate() + ".json"));
-                Terminal::setTitle("Saved!");
+                std::string filename = arg.empty()? "/chat_" + getDate(): arg;
+                if(arg.find(DEFAULT_FILE_EXTENSION)==string::npos) filename+=DEFAULT_FILE_EXTENSION;
+                chatContext.saveConversation(save_folder + filename);
+                logging::success("Conversation saved as \"%s\".", filename.c_str());Terminal::pause();
                 Terminal::clear();
                 continue;
-                // load from json
+
+                // load from file
             } else if (cmd == "/load") {
-                if (chatContext.loadSavedConversation(std::string(save_folder + arg + ".json"))) {
-                    Terminal::setTitle("Conversation loaded!");
+                std::string filename = arg;
+                if(arg.find(DEFAULT_FILE_EXTENSION)==string::npos) filename+=DEFAULT_FILE_EXTENSION;
+                if (chatContext.loadSavedConversation(std::string(save_folder + filename))) {
+                    logging::success("Conversation loaded from \"%s\".", filename);Terminal::pause();
                     Terminal::clear();
                     continue;
                 } else {
-                    Terminal::setTitle("Failed to load conversation!");
-                    Terminal::pause();
+                    logging::error("Failed to load conversation!");Terminal::pause();
                     continue;
                 }
 
@@ -169,7 +158,7 @@ int main(int argc, char *argv[]) {
                 continue;
 
                 // reset all chat historial
-            } else if (cmd == "/reset") {
+            } else if (cmd == "/reset" || cmd == "/clear") {
                 chatContext.resetChatHistory();
                 currentActingActor = chatContext.getAssistantName();
                 continue;
@@ -177,32 +166,31 @@ int main(int argc, char *argv[]) {
                 // exit from program
             } else if (cmd == "/quit" || cmd == "/q") {
                 exit(0);
-
+                
             } else if (cmd == "/history") {
-                std::cout << "Current history:"
+                std::cout << "> Current history:\n"
                           << chatContext.composeChatPrompt()
-                          << std::endl;
-                std::cout << " " << endl;
+                          << "\n";
                 Terminal::pause();
                 continue;
 
                 // show current prompt
             } else if (cmd == "/lprompt") {
-                std::cout << "Current prompt:" << chatContext.composeChatPrompt()
-                          << std::endl;
-                std::cout << " " << endl;
+                std::cout << ">Current prompt:\n\n" << chatContext.composeChatPrompt()
+                          << "\n";
                 Terminal::pause();
                 continue;
 
                 // list current parameters
             } else if (cmd == "/lparams") {
-                std::cout << "Current params:" << chatContext.dumpJsonPayload() << std::endl;
-                std::cout << " " << endl;
+                std::cout << "> Current params:\n\n";
+                std::cout << chatContext.dumpJsonPayload() << "\n\n";
                 Terminal::pause();
                 continue;
 
-            // view actors 
+                // view actors 
             } else if (cmd == "/lactors") {
+                std::cout << "> Current actors:\n";
                 chatContext.listCurrentActors();
                 Terminal::pause();
                 continue;
@@ -213,13 +201,13 @@ int main(int argc, char *argv[]) {
                 chatContext.loadParametersSettings(param_profile);
                 chatContext.setupStopWords(); 
                 chatContext.setPrompt(prevPrompt);
-                Terminal::setTitle("Params reloaded");
+                logging::success("Params reloaded!");Terminal::pause();
                 continue;
 
+                // reload template
             } else if (cmd == "/rtemplate") {
-                chatContext.loadPromptTemplates(prompt_template_profile.c_str());
-                // setupChatGuards(chatContext);
-                Terminal::setTitle("Template reloaded");
+                chatContext.loadPromptTemplates(prompt_template_profile);
+                logging::success("Template reloaded");Terminal::pause();
                 continue;
 
                 // retry last completion
@@ -231,7 +219,8 @@ int main(int argc, char *argv[]) {
                 // ...
 
             } else {
-                Terminal::setTitle("Wrong cmd!");
+                logging::error("Wrong cmd!");
+                Terminal::pause();
                 continue;
             }
         } else {
@@ -239,13 +228,21 @@ int main(int argc, char *argv[]) {
         }
 
         // Start to composing the prompt
+        chatContext.createActor(currentActingActor, "actor", ANSIColors::getRandColor());
         chatContext.printActorChaTag(currentActingActor);
         chatContext.generateChatPrompt(currentActingActor);
-        if (chatContext.requestCompletion()) {
-            chatContext.addNewMessage(currentActingActor, chatContext.completionBuffer.buffer);
-            cout << endl;
-        }else{
+
+        auto res = chatContext.requestCompletion(ipaddr, DEFAULT_COMPLETION_ENDPOINT, port);
+        if (res.Status != 200) {
+            if (res.Status == 500)
+                logging::critical("500 Internal serve error!");
+            else
+                logging::error("Error to connect, please check server and try again.");
             chatContext.removeLastMessage();
+            Terminal::pause();
+        }else{
+            chatContext.cureCompletionForChat();
+            chatContext.addNewMessage(currentActingActor, chatContext.completionBuffer.buffer);
         }
     }
 

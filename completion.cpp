@@ -1,6 +1,6 @@
 #include "completion.hpp"
 
-std::atomic<bool> stopCompletionFlag(false);
+bool stopCompletionFlag = false;
 
 void Completion::loadParametersSettings(const char *profile_name) {
     // Retrieve parsed parameters from parameters.json
@@ -75,31 +75,15 @@ std::string Completion::dumpJsonPayload() { // converts parameters_t to json str
     return json;
 }
 
-bool Completion::requestCompletion() {
+Response Completion::requestCompletion(
+    const char* ipaddr, const char* completion_endpoint, const int16_t port) 
+{
+    #ifdef __WIN32__
     Terminal::setTitle("Completing...");
+    #endif
     std::string json = dumpJsonPayload();
-    httpRequest Req;
-    Response res = Req.post(endpoint_url, json.c_str(), completionCallback, &completionBuffer);
-    if (res.Status != 200) {
-        if (res.Status == 500) {
-            std::cout << std::endl << json << std::endl;
-            std::cout << REDB << "[Error] Server Internal error."
-                 << ANSI_COLOR_RESET << std::endl;
-        } else {
-            std::cout << REDB
-                 << "[Error] Please check server connection and try again."
-                 << ANSI_COLOR_RESET << std::endl;
-        }
-        Terminal::pause();
-        return false;
-    }
-
-    // delete double breakline and space at the start
-    completionBuffer.buffer.erase(0, completionBuffer.buffer.find_first_not_of(" "));
-    while (!completionBuffer.buffer.empty() && completionBuffer.buffer.back() == '\n') {
-        completionBuffer.buffer.erase(completionBuffer.buffer.size() - 1);
-    }
-    return true;
+    Response res = Req.post(ipaddr, port, completion_endpoint, json, completionCallback, &completionBuffer);
+    return res;
 }
 
 void Completion::setPrompt(std::string content){
@@ -110,7 +94,7 @@ void Completion::addPrompt(std::string content){
     parameters.prompt += content;
 }
 
-std::string Completion::getCurrentPrompt(){
+std::string Completion::getPrompt(){
     return parameters.prompt;
 }
 

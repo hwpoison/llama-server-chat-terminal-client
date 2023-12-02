@@ -1,4 +1,6 @@
 .vscode/
 saved_chats/
+build/
 *.o
 *.exe
+*.zip

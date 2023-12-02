@@ -12,6 +12,8 @@ httpRequest::httpRequest() {
 bool httpRequest::close_connection(SocketType connection) {
 #ifdef __WIN32__
   closesocket(connection);
+#else
+  // close(connection);
 #endif
   logging::info("Conection closed");
   return true;
@@ -29,7 +31,7 @@ bool httpRequest::send_data(SocketType connection, const char *data) {
   }
 };
 
-// http
+/* http
 std::string httpRequest::resolveDomain(const char *domain) {
 #ifdef __WIN32__
   struct hostent *remoteHost;
@@ -49,10 +51,13 @@ std::string httpRequest::resolveDomain(const char *domain) {
 #else
   return domain;
 #endif
-}
+}*/
 
 Response httpRequest::post(
-        const std::string url, json payload,
+        const char* ipaddr, 
+        const int16_t port,
+        const char* endpoint, 
+        json payload,
         const std::function<bool(std::string chunck, const CallbackBus *bus)> 
         &reader_callback = nullptr, 
         const CallbackBus *bus=nullptr)
@@ -60,18 +65,17 @@ Response httpRequest::post(
   if (!debug) {
     logging::disable_msg();
   }
-  URLParser parsed_url(url);
-  logging::info("Connecting to %s to port %d", parsed_url.getDomain(),
-                parsed_url.getPort());
+  logging::info("Connecting to %s to port %d", ipaddr,
+                port);
   logging::info("Sending:", payload);
   SocketType connection =
-    connect_to(parsed_url.getDomain().c_str(), parsed_url.getPort());
+    connect_to(ipaddr, port);
   logging::info("Socket status: %d", connection);
   Response response;
-
+  
   logging::info("Sending POST request");
 
-  std::string request_body = "POST " + parsed_url.getPath() + " HTTP/1.1\r\n";
+  std::string request_body = "POST " + std::string(endpoint)  + " HTTP/1.1\r\n";
   request_body += "Host: \r\n";
   request_body += "Accept: text/event-stream\r\n";
   request_body += "Content-Type: application/json\r\n";
@@ -115,7 +119,7 @@ Response httpRequest::post(
   return response;
 };
 
-SocketType httpRequest::connect_to(const char *domain, int16_t port) {
+SocketType httpRequest::connect_to(const char *ipaddr, int16_t port) {
 #ifdef __WIN32__
   WSADATA wsaData;
   if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
@@ -126,7 +130,7 @@ SocketType httpRequest::connect_to(const char *domain, int16_t port) {
 
   SocketType clientSocket = socket(AF_INET, SOCK_STREAM, 0);
 
-  if (clientSocket == INVALID_SOCKET) {
+  if (clientSocket == Invalid_socket) {
     logging::error("Error to create a socket.");
     clean_up();
     return 1;
@@ -135,15 +139,14 @@ SocketType httpRequest::connect_to(const char *domain, int16_t port) {
   sockaddr_in serverAddress;
   serverAddress.sin_family = AF_INET;
   serverAddress.sin_port = htons(port);
+  serverAddress.sin_addr.s_addr = inet_addr(ipaddr);
 
-  std::string solved_domain = this->resolveDomain(domain);
-  serverAddress.sin_addr.s_addr = inet_addr(solved_domain.c_str());
   if (connect(clientSocket, (sockaddr *)&serverAddress,
               sizeof(serverAddress)) == Socket_error) {
     logging::error("Error connecting to the server.");
     get_last_error();
     close_connection(clientSocket);
-    return 1;
+    return -1;
   }
   logging::success("Socket created.");
   return clientSocket;
@@ -165,6 +168,9 @@ int httpRequest::get_last_error() {
     }
   }
   return errorCode;
+#else
+  perror("Error caused by ");
+  return 1;
 #endif
 }
 

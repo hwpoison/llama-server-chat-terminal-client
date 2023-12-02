@@ -50,5 +50,11 @@ const char *get_arg_value(int argc, char **argv, const char *target_arg){
 }
 
 void printCmdHelp(){
-    std::cout << "Usage:\n --my-prompt <my_prompt_name>\n --param-profile <profile_name>\n --prompt-template <template_name>" << std::endl;
+    std::cout << "Usage:\n \
+    --my-prompt <my_prompt_name> (default: default)\n \
+    --param-profile <profile_name> (default: samantha)\n \
+    --prompt-template <template_name> (default: empty)\n \
+    --no-guards (default: true)\n \
+    --ip <ip address> (default: 127.0.0.1)\n \
+    --port <port> (default: 8080)" << std::endl;
 }

@@ -1,15 +1,16 @@
 #include "terminal.hpp"
 
 void Terminal::setTitle(std::string titleContent) {
-  std::system(std::string("title " + titleContent).c_str());
+  #ifdef __WIN32__
+    std::system(std::string("title " + titleContent).c_str());
+  #endif
 }
 
 void Terminal::resetColor() { std::cout << ANSI_COLOR_RESET; }
 
 void Terminal::pause() {
-#ifdef __WIN32__
-  std::system("pause");
-#endif
+    std::cout << "Press a key to continue...";
+    std::cin.get();
 }
 
 void Terminal::resetCursor() {

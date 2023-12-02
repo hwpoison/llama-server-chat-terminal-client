@@ -1,19 +1,28 @@
 # Llama.cpp Server Terminal Client
 
-Welcome to the llama.cpp server terminal client, a versatile chat-style interface designed for interacting with the llama server. This interface seamlessly integrates both chat and command functionalities, providing you with control over the flow of your conversations. You can save and load conversations, setting your owns prompts and templates styles.
+This is a lightweight terminal interface for chat with llama.cpp server following an outline of a script with actors and chatguards for preserve the experience of a chat, also you can use commands for manipulate the conversation flow. Supports personal prompts and prompts templates. It is compilable for Windows and Linux.
+
+*llama.cpp server:* https://github.com/ggerganov/llama.cpp/tree/master/examples/server
 
 ![Chat style view](screenshot.png)
 
 ## How to Use
 #### Configuration files
 **my_prompts.json**  contains all prompts setted with system prompt, actors and names.
+
+<br>
+
 **params.json**  contains all definitions for prompt adjustements and prompt templates styles.
 
 #### Execultable Arguments:
--  --my-prompt *prompt name*           (default: default)
--  --param-profile* profile name*      (default: default)
--  --prompt-template *prompt template* (default: empty)
--  --url "htpp://....."                (default: "http://localhost:8080/completion")
+-  --my-prompt *prompt name*            (default: default)
+-  --param-profile* profile name*       (default: default)
+-  --prompt-template *prompt template*  (default: empty)
+-  --no-chat-guards: Disable the chat guards (default: false)
+-  --ip <ip address>                    (default: 127.0.0.1)
+-  --port <port>                        (default: 8080)
+
+The chat guards adds the prompt template tokens into stop words array.
 
 #### Command support:
 To input a command, simply insert `/*command*` followed by the desired command.
@@ -50,3 +59,8 @@ To input a command, simply insert `/*command*` followed by the desired command.
     git submodule init
     git submodule update
     make
+
+
+## **Tested on**
+
+<table><tbody><tr><td>Windows</td><td>GCC</td><td>gcc (x86_64-posix-seh-rev1, Built by MinGW-Builds project) 13.1.0</td></tr><tr><td>Linux</td><td>GCC</td><td>gcc (Ubuntu 9.4.0-1ubuntu1~20.04.1) 9.4.0</td></tr></tbody></table>
