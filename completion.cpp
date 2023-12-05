@@ -90,10 +90,6 @@ void Completion::setPrompt(std::string content){
     parameters.prompt = content;
 }
 
-void Completion::addPrompt(std::string content){
-    parameters.prompt += content;
-}
-
 std::string Completion::getPrompt(){
     return parameters.prompt;
 }

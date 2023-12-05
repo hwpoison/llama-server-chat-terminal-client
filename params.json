@@ -15,40 +15,17 @@
 				"EOS":			"\n"
 			}
 		},
-		"mistral_ggml":
+		"chat_ggml":
 		{
 			"TYPE":"chat",
 			"SEQ":{
 				"B_SYS":		"<|im_start|>system\n",
-				"E_SYS":		"<|im_end|>",
+				"E_SYS":		"<|im_end|>\n",
 				"B_USER":		"<|im_start|>user\n",
-				"E_USER":		"<|im_end|>",
+				"E_USER":		"<|im_end|>\n",
 				"B_ASSISTANT":	"<|im_start|>assistant\n",
-				"EOS":			"<|im_end|>"
+				"EOS":			"<|im_end|>\n"
 			}
-		},
-		
-		"mistral_instruct":
-		{
-			"TYPE":"instuction",
-			"SEQ":{
-					"B_SYS":"<s>[INST]",
-					"E_SYS":"</s>",
-			}
-
-		},
-		"sparrow_1b":
-		{
-			"TYPE":"instuction",
-			"SEQ":{
-					"B_SYS":"<s>[INST] <<SYS>>",
-					"E_SYS":"<</SYS>>",
-					"B_USER":"",
-					"E_USER":"[/INST]",
-					"B_ASSISTANT":"</s><s>[INST]",
-					"EOS":"[/INST]"
-			}
-
 		}
 	},
 
@@ -57,7 +34,7 @@
 ///////////////////////////////////////////
 
 	"params_profiles":{
-	    "default": { // for chat
+	    "default": { // default for a chat interaction
 	        "mirostat": 0,
 	        "mirostat_tau": 5,
 	        "mirostat_eta": 0.1,

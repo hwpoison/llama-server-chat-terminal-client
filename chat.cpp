@@ -5,9 +5,10 @@ int main(int argc, char *argv[]) {
     const char* prompt_template_profile = "empty";
     const char* ipaddr = DEFAULT_IP;
     const char* param_profile = "default";
-    const char *input_arg = nullptr;
     bool chat_guards = true;
     int16_t port = DEFAULT_PORT;
+
+    const char *input_arg = nullptr;
     
     // Handle args
     if ((input_arg = get_arg_value(argc, argv, "--my-prompt")) != NULL)
@@ -25,7 +26,7 @@ int main(int argc, char *argv[]) {
     if ((input_arg = get_arg_value(argc, argv, "--port")) != NULL)
         port = std::stoi(input_arg);
 
-    if ((input_arg = get_arg_value(argc, argv, "--no-guards")) != NULL)
+    if ((input_arg = get_arg_value(argc, argv, "--no-chat-guards")) != NULL)
         chat_guards = false;
 
     if ((input_arg = get_arg_value(argc, argv, "--help")) != NULL) {
@@ -42,10 +43,9 @@ int main(int argc, char *argv[]) {
     chatContext.loadUserPromptProfile(my_prompt_profile);
     chatContext.loadPromptTemplates(prompt_template_profile);
     chatContext.loadParametersSettings(param_profile);
-    if(chat_guards) chatContext.setupStopWords();
+    chatContext.setupStopWords();
 
-    std::string userInput;
-    std::string director_input;
+    std::string userInput, director_input;
     std::string save_folder = "saved_chats/";
 
     // Create the director and narrator actors
@@ -73,7 +73,7 @@ int main(int argc, char *argv[]) {
             previousActingActor = currentActingActor;
         }
 
-        // User input
+        // Print user chat tag
         chatContext.printActorChaTag(chatContext.getUserName());
         Terminal::resetColor();
         std::getline(std::cin, userInput);
@@ -139,7 +139,7 @@ int main(int argc, char *argv[]) {
                 std::string filename = arg;
                 if(arg.find(DEFAULT_FILE_EXTENSION)==string::npos) filename+=DEFAULT_FILE_EXTENSION;
                 if (chatContext.loadSavedConversation(std::string(save_folder + filename))) {
-                    logging::success("Conversation loaded from \"%s\".", filename);Terminal::pause();
+                    logging::success("Conversation loaded from \"%s\".", filename.c_str());Terminal::pause();
                     Terminal::clear();
                     continue;
                 } else {
@@ -169,14 +169,14 @@ int main(int argc, char *argv[]) {
                 
             } else if (cmd == "/history") {
                 std::cout << "> Current history:\n"
-                          << chatContext.composeChatPrompt()
+                          << chatContext.dumpFormatedPrompt()
                           << "\n";
                 Terminal::pause();
                 continue;
 
                 // show current prompt
             } else if (cmd == "/lprompt") {
-                std::cout << ">Current prompt:\n\n" << chatContext.composeChatPrompt()
+                std::cout << ">Current prompt:\n\n" << chatContext.dumpFormatedPrompt()
                           << "\n";
                 Terminal::pause();
                 continue;
@@ -227,12 +227,17 @@ int main(int argc, char *argv[]) {
             chatContext.addNewMessage(chatContext.getUserName(), userInput);
         }
 
-        // Start to composing the prompt
-        chatContext.createActor(currentActingActor, "actor", ANSIColors::getRandColor());
+        // Print current actor chat tag
         chatContext.printActorChaTag(currentActingActor);
-        chatContext.generateChatPrompt(currentActingActor);
 
-        auto res = chatContext.requestCompletion(ipaddr, DEFAULT_COMPLETION_ENDPOINT, port);
+        // Compose prompt
+        chatContext.setPrompt(
+            chatContext.dumpFormatedPrompt() + 
+            chatContext.getActorTemplateFooter(currentActingActor)
+        );
+
+        // Send for completion
+        Response res = chatContext.requestCompletion(ipaddr, DEFAULT_COMPLETION_ENDPOINT, port);
         if (res.Status != 200) {
             if (res.Status == 500)
                 logging::critical("500 Internal serve error!");

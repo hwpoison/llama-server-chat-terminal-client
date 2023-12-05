@@ -106,8 +106,6 @@ public:
 
     void setPrompt(std::string content);
 
-    void addPrompt(std::string content);
-
     std::string getPrompt();
 
     void addStopWord(std::string word);

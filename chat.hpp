@@ -5,7 +5,6 @@
 #include <vector>
 #include <signal.h>
 #include <filesystem>
-#include <fstream>
 #include <algorithm>
 #include <map>
 
@@ -78,7 +77,7 @@ public:
         return false;
     }
 
-    // delete double breakline and space at the start
+    // Delete double breakline and space at the start
     void cureCompletionForChat(){
         if(guards){
             completionBuffer.buffer.erase(0, completionBuffer.buffer.find_first_not_of(" "));
@@ -88,7 +87,8 @@ public:
         }
     }
 
-    std::string composeChatPrompt() {
+    // Return chat history + prompt template
+    std::string dumpFormatedPrompt() {
         std::string newPrompt;
         for (const chat_entry_t &entry : history) {
             actor_t actor = actors[entry.actor_name];
@@ -113,8 +113,8 @@ public:
         return newPrompt;
     }
 
-    void generateChatPrompt(std::string actor_name) {  
-        createActor(actor_name, "actor", ANSIColors::getRandColor());
+    // Append the prompt tail related to an actor
+    std::string getActorTemplateFooter(std::string actor_name) {
         std::string begin;
         actor_t actor = actors[actor_name];
         if (actor.role == "user") {
@@ -128,8 +128,7 @@ public:
             begin += prompt_template.begin_assistant;
             begin += actor.name + ":";
         }
-        setPrompt(composeChatPrompt());
-        addPrompt(begin);
+        return begin;
     }
 
     void resetChatHistory(){
@@ -305,24 +304,26 @@ public:
         actors.clear();
     }
 
+    // add chat guards, all possible variations of stop words expected for preserve
+    // a chat scheme conversation.
     void setupStopWords(){
-        // add chat guards, all possible variations of stop words expected for a 
-        // chat scheme conversation
-        for (const auto &[key, actor] : actors) {
-            addActorStopWords(actor.name);
-        }
-
-        auto addStop = [this](std::string token) {
-            if(token==""){}else{
-                if(token!="\n") addStopWord(normalizeText(token));
+        if(guards){
+            for (const auto &[key, actor] : actors) {
+                addActorStopWords(actor.name);
             }
-        };
 
-        addStop(prompt_template.begin_user);
-        addStop(prompt_template.end_user);
-        addStop(prompt_template.begin_system);
-        addStop(prompt_template.end_system);
-        addStop(prompt_template.eos);
+            auto addStop = [this](std::string token) {
+                if(token==""){}else{
+                    if(token!="\n") addStopWord(normalizeText(token));
+                }
+            };
+
+            addStop(prompt_template.begin_user);
+            addStop(prompt_template.end_user);
+            addStop(prompt_template.begin_system);
+            addStop(prompt_template.end_system);
+            addStop(prompt_template.eos);
+        }
     }
 
     void listCurrentActors(){
@@ -332,7 +333,6 @@ public:
     }
 
     bool guards = true;
-
 private:
     std::string user_name;
     std::string assistant_name;
@@ -342,6 +342,5 @@ private:
     
     actor_list_t actors;
     chat_history_t history;
-
 };
 #endif
