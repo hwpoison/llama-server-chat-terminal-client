@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 #include <signal.h>
+#include <map>
 
 #include "sjson.hpp"
 #include "utils.hpp"
@@ -16,31 +17,6 @@
 #define PARAMS_FILENAME "params.json"
 
 extern bool stopCompletionFlag;
-
-struct parameters_t {
-    int mirostat = 0;
-    int mirostat_tau = 5;
-    float mirostat_eta = 0.1;
-    int frecuency_penalty = 0;
-    int n_probs = 0;
-    int presence_penalty = 0;
-    int top_k = 40;
-    float top_p = 0.95;
-    float min_p = 0.05;
-    int typical_p = 1;
-    int tfz_z = 1;
-    int repeat_last_n = 256;
-    float repeat_penalty = 1.18;
-    int slot_id = 0;
-    float temperature = 0.8;
-    int n_predict = 100;
-    bool stream = true;
-    bool ignore_eos = false;
-    bool penalize_nl = true;
-    std::vector<std::string> stop;
-    std::string grammar = "";
-    std::string prompt;
-};
 
 static void completionSignalHandler(int signum) {
     stopCompletionFlag =  true;
@@ -98,7 +74,7 @@ static bool completionCallback(const std::string &chunck, const CallbackBus *bus
 class Completion {
 public:
 
-    void loadParametersSettings(const char *profile_name);
+    bool loadParametersSettings(const char *profile_name);
 
     std::string dumpJsonPayload();
 
@@ -114,6 +90,7 @@ public:
 
 private:
     httpRequest Req;
-    parameters_t parameters;
+    std::map<std::string, std::string>  parameters = {{"prompt",""}};
+    std::vector<std::string> stop_words;
 };
 #endif

@@ -40,7 +40,9 @@ int main(int argc, char *argv[]) {
 
     Chat chatContext;
     chatContext.guards = chat_guards;
-    chatContext.loadUserPromptProfile(my_prompt_profile);
+    if(!chatContext.loadUserPromptProfile(my_prompt_profile))
+        exit(1);
+
     chatContext.loadPromptTemplates(prompt_template_profile);
     chatContext.loadParametersSettings(param_profile);
     chatContext.setupStopWords();
@@ -147,6 +149,17 @@ int main(int argc, char *argv[]) {
                     continue;
                 }
 
+                // load prompt template
+            } else if (cmd == "/stemplate") {
+                if(chatContext.loadPromptTemplates(arg.c_str())){
+                    logging::success("Template loaded from \"%s\".", arg.c_str());Terminal::pause();
+                    Terminal::clear();
+                    continue;
+                } else {
+                    logging::error("Failed to load template!");Terminal::pause();
+                    continue;
+                }
+
                 // undo only last message
             } else if (cmd == "/undolast") {
                 chatContext.removeLastMessage(1);
@@ -237,6 +250,9 @@ int main(int argc, char *argv[]) {
         );
 
         // Send for completion
+        #ifdef __WIN32__
+        Terminal::setTitle("Completing...");
+        #endif
         Response res = chatContext.requestCompletion(ipaddr, DEFAULT_COMPLETION_ENDPOINT, port);
         if (res.Status != 200) {
             if (res.Status == 500)
@@ -244,6 +260,7 @@ int main(int argc, char *argv[]) {
             else
                 logging::error("Error to connect, please check server and try again.");
             chatContext.removeLastMessage();
+            cout << "ERROR:" << res.body << endl;
             Terminal::pause();
         }else{
             chatContext.cureCompletionForChat();

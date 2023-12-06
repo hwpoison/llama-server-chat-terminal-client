@@ -17,7 +17,7 @@ yyjson_doc* sjson::read(const char* raw_json){
 yyjson_doc* sjson::open(const char* filename) {
     current_doc = yyjson_read_file(filename, flg, NULL, &err);
     if (!current_doc){
-        std::cout << "Problem reading the conversation file \"" << filename << "\": read error (" << err.code << "): " << err.msg << " at position:" << err.pos << std::endl;
+        std::cout << "Problem reading the file \"" << filename << "\": read error (" << err.code << "): " << err.msg << " at position:" << err.pos << std::endl;
     }
     
     current_doc_root = yyjson_doc_get_root(current_doc);

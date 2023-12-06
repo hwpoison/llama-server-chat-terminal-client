@@ -53,7 +53,7 @@ To input a command, simply insert `/*command*` followed by the desired command.
 - **lactors:** Print current actors.
 - **rparams** Reload current parameter profile.
 - **rtemplate** Reload current template profile.
-
+- **stemplate (template name)** Load and set prompt template in runtime.
 ### Instructions to build
 
     git submodule init

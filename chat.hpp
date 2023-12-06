@@ -146,11 +146,17 @@ public:
         }
     }
 
-    void loadUserPromptProfile(const char *prompt_name) {
+    bool loadUserPromptProfile(const char *prompt_name) {
         sjson prompt_file = sjson("my_prompts.json");
-        
+        if(!prompt_file.is_opened())
+            return false;
+
         const char* prompt_[] = {prompt_name, "\0"}; // file -> daryl
         yyjson_val *my_prompt = prompt_file.get_value(prompt_);
+        if(my_prompt==NULL){
+            logging::error("Prompt \"%s\" not found.", prompt_name);
+            return false;
+        }
         yyjson_val *system = yyjson_obj_get(my_prompt, "system");  // daryl->system
 
         // load system prompt and register system actor
@@ -182,13 +188,15 @@ public:
                 }
             }
         }
+
+        return true;
     }
 
     bool loadSavedConversation(std::string file_path) {
         sjson saved_file = sjson(file_path.c_str());
-        if(!saved_file.is_opened()){
+        if(!saved_file.is_opened())
             return false;
-        }
+
         history.clear();
         yyjson_val *hits = yyjson_obj_get(saved_file.get_current_root(), "history");
         size_t idx, max;
@@ -240,26 +248,30 @@ public:
         yyjson_mut_doc_free(doc);
     }
 
-    void loadPromptTemplates(const char *prompt_style_name) {
-        prompt_template_t promptTemplate;
-        const char *key_name = "prompt_templates";
-        sjson template_base = sjson("params.json");
+    bool loadPromptTemplates(const char *prompt_template_name) {
+        sjson template_file = sjson(PARAMS_FILENAME);
+        if(!template_file.is_opened())
+            return false;
 
-        const char *PROMPT_TYPE_[] = {key_name, prompt_style_name, "TYPE", "\0"};
-        promptTemplate.prompt_type = template_base.get_str(PROMPT_TYPE_);
+        const char *main_key = "prompt_templates";
+        const char *PROMPT_TYPE_[] = {main_key, prompt_template_name, "TYPE", "\0"};
+        if(template_file.get_str(PROMPT_TYPE_) == NULL)
+            return false;
 
         const auto loadSeqToken = [&](const char *key, const char *field_key) {
-            const char *keys[] = {key_name, prompt_style_name, key, field_key, "\0"};
-            return template_base.get_str(keys);
+            const char *keys[] = {main_key, prompt_template_name, key, field_key, "\0"};
+            const char* key_value = template_file.get_str(keys);
+            return key_value?key_value:"";
         };
-        promptTemplate.begin_system =       loadSeqToken("SEQ", "B_SYS");
-        promptTemplate.end_system =         loadSeqToken("SEQ", "E_SYS");
-        promptTemplate.begin_user =         loadSeqToken("SEQ", "B_USER");
-        promptTemplate.end_user =           loadSeqToken("SEQ", "E_USER");
-        promptTemplate.begin_assistant =    loadSeqToken("SEQ", "B_ASSISTANT");
-        promptTemplate.eos =                loadSeqToken("SEQ", "EOS");
 
-        prompt_template = promptTemplate;
+        prompt_template.begin_system =       loadSeqToken("SEQ", "B_SYS");
+        prompt_template.end_system =         loadSeqToken("SEQ", "E_SYS");
+        prompt_template.begin_user =         loadSeqToken("SEQ", "B_USER");
+        prompt_template.end_user =           loadSeqToken("SEQ", "E_USER");
+        prompt_template.begin_assistant =    loadSeqToken("SEQ", "B_ASSISTANT");
+        prompt_template.eos =                loadSeqToken("SEQ", "EOS");
+
+        return true;
     }
 
     void printActorChaTag(std::string actor_name) {
@@ -338,7 +350,7 @@ private:
     std::string assistant_name;
 
     std::string system_prompt;
-    prompt_template_t prompt_template;
+    prompt_template_t prompt_template = {"", "\n", "", "\n", "", "\n"};
     
     actor_list_t actors;
     chat_history_t history;
