@@ -12,7 +12,7 @@ This is a lightweight terminal interface for chat with llama.cpp server followin
 
 <br>
 
-**params.json**  contains all definitions for prompt adjustements and prompt templates styles.
+**params.json**  contains all definitions for prompt adjustements and prompt templates templates for formated the prompt.
 
 #### Execultable Arguments:
 -  --my-prompt *prompt name*            (default: default)

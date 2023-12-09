@@ -1,17 +1,23 @@
 {
 ///////////////////////////////////////////
-// All prompt templates
+// All prompt templates                  
+/*
+	TYPE:
+		chat :use the chat format into the sent prompt.
+		instruct :sent only content encapsuled between user and assistant.
+	SEQ: Header and Footer for determinated roles.
+		B_SYS and E_SYS: System 
+		B_USER and E_USER: User
+		B_ASSISTANT and EOS: Assistant
+*/
 ///////////////////////////////////////////
 	"prompt_templates":{
 		"empty":
 		{
 			"TYPE":"chat",
 			"SEQ":{
-				"B_SYS":		"",
 				"E_SYS":		"\n",
-				"B_USER":		"",
 				"E_USER":		"\n",
-				"B_ASSISTANT":	"",
 				"EOS":			"\n"
 			}
 		},
@@ -26,6 +32,16 @@
 				"B_ASSISTANT":	"<|im_start|>assistant\n",
 				"EOS":			"<|im_end|>\n"
 			}
+		},
+		"stablelm":
+		{
+			"TYPE":"instruct",
+			"SEQ":{
+				"B_USER":		"<|user|>\n",
+				"E_USER":		"<|endoftext|>\n",
+				"B_ASSISTANT":	"<|assistant|>\n",
+				"EOS":			"<|endoftext|>\n"
+			}
 		}
 	},
 
@@ -34,7 +50,7 @@
 ///////////////////////////////////////////
 
 	"params_profiles":{
-	    "default": { // default for a chat interaction
+	    "default": {
 	        "mirostat": 0,
 	        "mirostat_tau": 5,
 	        "mirostat_eta": 0.1,
@@ -45,7 +61,6 @@
 	        "typical_p": 1,
 	        "tfz_z": 1,
 	        "n_probs":0,
-	        // "grammar":"", // "root ::= answer\nanswer ::= (Sunny. | Cloudy. | Rainy.)",
 	        "presence_penalty":0,
 	        "repeat_last_n": 256,
 	        "repeat_penalty": 1.18,

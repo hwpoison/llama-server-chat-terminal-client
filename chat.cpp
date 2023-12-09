@@ -54,9 +54,6 @@ int main(int argc, char *argv[]) {
     chatContext.createActor("Director", "system", "yellow");
     chatContext.createActor("Narrator", "system", "yellow");
 
-    // Set up the system prompt
-    chatContext.addNewMessage("System", chatContext.getSystemPrompt());
-
     Terminal::resetColor();
     Terminal::clear();
 
@@ -182,15 +179,8 @@ int main(int argc, char *argv[]) {
             } else if (cmd == "/quit" || cmd == "/q") {
                 exit(0);
                 
-            } else if (cmd == "/history") {
-                std::cout << "> Current history:\n"
-                          << chatContext.dumpFormatedPrompt()
-                          << "\n";
-                Terminal::pause();
-                continue;
-
                 // show current prompt
-            } else if (cmd == "/lprompt") {
+            } else if (cmd == "/lprompt" || cmd == "/history") {
                 std::cout << ">Current prompt:\n\n" << chatContext.dumpFormatedPrompt()
                           << "\n";
                 Terminal::pause();

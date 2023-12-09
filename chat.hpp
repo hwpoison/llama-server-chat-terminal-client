@@ -94,18 +94,18 @@ public:
             actor_t actor = actors[entry.actor_name];
             if (actor.role == "user") {
                 newPrompt += prompt_template.begin_user;
-                newPrompt += actor.name + ":";
+                if(use_chat_tags)newPrompt += actor.name + ":";
                 newPrompt += entry.message_content;
                 newPrompt += prompt_template.end_user;
-            } else if (actor.role == "system") {
+            } else if (actor.role == "system" and use_system_prompt) {
                 newPrompt += prompt_template.begin_system;
-                if(actor.name!="System")
+                if(actor.name!="System" and use_chat_tags)
                     newPrompt += actor.name + ":";
                 newPrompt += entry.message_content;
                 newPrompt += prompt_template.end_system;
             }else{
                 newPrompt += prompt_template.begin_assistant;
-                newPrompt += actor.name + ":";
+                if(use_chat_tags)newPrompt += actor.name + ":";
                 newPrompt += entry.message_content;
                 newPrompt += prompt_template.eos;
             }
@@ -115,25 +115,25 @@ public:
 
     // Append the prompt tail related to an actor
     std::string getActorTemplateFooter(std::string actor_name) {
-        std::string begin;
+        std::string footer;
         actor_t actor = actors[actor_name];
         if (actor.role == "user") {
-            begin += prompt_template.begin_user;
-            begin += actor.name + ":";
-            begin += prompt_template.end_user;
+            footer += prompt_template.begin_user;
+            if(use_chat_tags)footer += actor.name + ":";
+            footer += prompt_template.end_user;
         } else if (actor.role == "system") {
-            begin += prompt_template.begin_system;
-            begin += actor.name + ":";
+            footer += prompt_template.begin_system;
+            if(use_chat_tags)footer += actor.name + ":";
         } else {
-            begin += prompt_template.begin_assistant;
-            begin += actor.name + ":";
+            footer += prompt_template.begin_assistant;
+            if(use_chat_tags)footer += actor.name + ":";
         }
-        return begin;
+        return footer;
     }
 
     void resetChatHistory(){
         if (history.size() > 1)
-            history.erase(history.begin() + 1, history.end());
+            history.erase(history.begin() + (use_system_prompt?1:0), history.end());
     }
 
     void draw() {
@@ -141,7 +141,7 @@ public:
         for (const chat_entry_t &entry : history) {
             printActorChaTag(entry.actor_name.c_str());
             cout << entry.message_content << "\n";
-            if (actors[entry.actor_name].name == "System")
+            if (use_system_prompt and actors[entry.actor_name].name == "System")
                 cout << "\n";
         }
     }
@@ -157,17 +157,27 @@ public:
             logging::error("Prompt \"%s\" not found.", prompt_name);
             return false;
         }
-        yyjson_val *system = yyjson_obj_get(my_prompt, "system");  // daryl->system
 
-        // load system prompt and register system actor
-        system_prompt = yyjson_get_str(system);
-        createActor("System", "system", "green_ul");
+        yyjson_val *system = yyjson_obj_get(my_prompt, "system");  // daryl->system
+        if(system != NULL){
+            createActor("System", "system", "green_ul");
+            system_prompt = yyjson_get_str(system);
+            addNewMessage("System", system_prompt);
+        }else{
+            use_system_prompt = false;
+        }
         
         // load actors list
         yyjson_val *actors = yyjson_obj_get(my_prompt, "actors");  // daryl->actors
-        size_t actor_count = yyjson_arr_size(actors);
-        cout << actor_count << "\n";
+        if(actors == NULL){
+            createActor("User", "user", "blue");
+            user_name = "User";
+            createActor("Assistant", "assistant", "pink");
+            assistant_name = "Assistant";
+            return true;
+        }
 
+        size_t actor_count = yyjson_arr_size(actors);
         for (size_t i = 0; i < actor_count; ++i) {
             yyjson_val *actor = yyjson_arr_get(actors, i);
             if (actor && yyjson_get_type(actor) == YYJSON_TYPE_OBJ) {
@@ -256,8 +266,11 @@ public:
 
         const char *main_key = "prompt_templates";
         const char *PROMPT_TYPE_[] = {main_key, prompt_template_name, "TYPE", "\0"};
-        if(template_file.get_str(PROMPT_TYPE_) == NULL)
-            return false;
+        const char *prompt_type = template_file.get_str(PROMPT_TYPE_);
+        if(prompt_type == NULL) return false;
+
+        if(!strcmp(template_file.get_str(PROMPT_TYPE_), "instruct"))
+            use_chat_tags = false;
 
         const auto loadSeqToken = [&](const char *key, const char *field_key) {
             const char *keys[] = {main_key, prompt_template_name, key, field_key, "\0"};
@@ -349,6 +362,9 @@ public:
 private:
     std::string user_name;
     std::string assistant_name;
+
+    bool use_chat_tags = true;
+    bool use_system_prompt = true;
 
     std::string system_prompt;
     prompt_template_t prompt_template = {"", "\n", "", "\n", "", "\n"};
