@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) {
     chatContext.setupStopWords();
 
     std::string userInput, director_input;
-    std::string save_folder = "saved_chats/";
+    std::string save_folder_path = "saved_chats/";
 
     // Create the director and narrator actors
     chatContext.createActor("Director", "system", "yellow");
@@ -122,43 +122,45 @@ int main(int argc, char *argv[]) {
 
                 // as director you can put your prompt
             } else if (cmd == "/director" || cmd == "dir") {
-                
                 chatContext.printActorChaTag("Director");
                 std::getline(std::cin, director_input);
                 chatContext.addNewMessage("Director", director_input);
 
                 // save chat in a file
             } else if (cmd == "/save") {
+                if(!std::filesystem::exists(save_folder_path))
+                    std::filesystem::create_directory(save_folder_path);
+
                 std::string filename = arg.empty()? "/chat_" + getDate(): arg;
                 if(arg.find(DEFAULT_FILE_EXTENSION)==string::npos) filename+=DEFAULT_FILE_EXTENSION;
-                chatContext.saveConversation(save_folder + filename);
-                logging::success("Conversation saved as \"%s\".", filename.c_str());Terminal::pause();
-                Terminal::clear();
+
+                if(chatContext.saveConversation(save_folder_path + filename))
+                    logging::success("Conversation saved as \"%s\".", filename.c_str());
+                else
+                    logging::error("Problem saving the conversation.");       
+                Terminal::pause();
                 continue;
 
                 // load from file
             } else if (cmd == "/load") {
                 std::string filename = arg;
-                if(arg.find(DEFAULT_FILE_EXTENSION)==string::npos) filename+=DEFAULT_FILE_EXTENSION;
-                if (chatContext.loadSavedConversation(std::string(save_folder + filename))) {
-                    logging::success("Conversation loaded from \"%s\".", filename.c_str());Terminal::pause();
-                    Terminal::clear();
-                    continue;
-                } else {
-                    logging::error("Failed to load conversation!");Terminal::pause();
-                    continue;
-                }
+                if(arg.find(DEFAULT_FILE_EXTENSION)==string::npos) 
+                    filename+=DEFAULT_FILE_EXTENSION;
+                if (chatContext.loadSavedConversation(std::string(save_folder_path + filename)))
+                    logging::success("Conversation loaded from \"%s\".", filename.c_str());
+                else
+                    logging::error("Failed to load conversation!");
+                Terminal::pause();
+                continue;
 
                 // load prompt template
             } else if (cmd == "/stemplate") {
-                if(chatContext.loadPromptTemplates(arg.c_str())){
-                    logging::success("Template loaded from \"%s\".", arg.c_str());Terminal::pause();
-                    Terminal::clear();
-                    continue;
-                } else {
-                    logging::error("Failed to load template!");Terminal::pause();
-                    continue;
-                }
+                if(chatContext.loadPromptTemplates(arg.c_str()))
+                    logging::success("Template loaded from \"%s\".", arg.c_str());
+                else
+                    logging::error("Failed to load template!");
+                Terminal::pause();
+                continue;
 
                 // undo only last message
             } else if (cmd == "/undolast") {
@@ -257,10 +259,10 @@ int main(int argc, char *argv[]) {
         if (res.Status != 200) {
             if (res.Status == 500)
                 logging::critical("500 Internal serve error!");
-            else
+            if (res.Status == -1)
                 logging::error("Error to connect, please check server and try again.");
             chatContext.removeLastMessage();
-            cout << "ERROR:" << res.body << endl;
+            if(!res.body.empty()) cout << "Server response body:" << res.body << endl;
             Terminal::pause();
         }else{
             chatContext.cureCompletionForChat();

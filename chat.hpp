@@ -218,7 +218,7 @@ public:
         return true;
     }
 
-    void saveConversation(std::string filename) {
+    bool saveConversation(std::string filename) {
         yyjson_mut_doc *doc = yyjson_mut_doc_new(NULL);
         yyjson_mut_val *root = yyjson_mut_obj(doc);
         yyjson_mut_doc_set_root(doc, root);
@@ -241,11 +241,12 @@ public:
             YYJSON_WRITE_PRETTY;  // | YYJSON_WRITE_ESCAPE_UNICODE;
         yyjson_write_err err;
         yyjson_mut_write_file(filename.c_str(), doc, flg, NULL, &err);
-        if (err.code) {
-            logging::error("Problem saving the conversation file \"%s\": %s", filename, err.msg);
-            Terminal::pause();
-        }
         yyjson_mut_doc_free(doc);
+        if (err.code) {
+            logging::error("Error writing the file \"%s\": %s", filename.c_str(), err.msg);
+            return false;
+        }
+        return true;
     }
 
     bool loadPromptTemplates(const char *prompt_template_name) {

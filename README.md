@@ -44,7 +44,7 @@ To input a command, simply insert `/*command*` followed by the desired command.
 <br>
   
 - **save (chatname):** Save the chat. (without extension)
-- **load (chatname):** Load a previously saved chat.
+- **load (chatname):** Load a previous saved chat.
 - **redraw:** Redraw the chat content.
 - **reset:** Reset the entire chat.
 - **quit / q:** Exit the program.
@@ -54,6 +54,7 @@ To input a command, simply insert `/*command*` followed by the desired command.
 - **rparams** Reload current parameter profile.
 - **rtemplate** Reload current template profile.
 - **stemplate (template name)** Load and set prompt template in runtime.
+
 ### Instructions to build
 
     git submodule init
