@@ -1,18 +1,25 @@
-# Llama.cpp Server Terminal Client
+# Llama.cpp/server Terminal Client
 
-This is a lightweight terminal interface for chat with llama.cpp server following an outline of a script with actors and chatguards for preserve the experience of a chat, also you can use commands for manipulate the conversation flow. Supports personal prompts and prompts templates. It is compilable for Windows and Linux.
+This is a lightweight terminal interface alternative for llama.cpp server following an outline of a chat script.
 
-*llama.cpp server:* https://github.com/ggerganov/llama.cpp/tree/master/examples/server
+* Many commands for manipulate the conversation flow and also debug it.
+* Prompt templates and Personal prompts can be created and customized.
+* Load/Save conversation.
+* Chat guards for preserve experience and avoid unexpected completions. 
+* Compilable for Windows and Linux.
+
+*llama.cpp project server:* https://github.com/ggerganov/llama.cpp/tree/master/examples/server
 
 ![Chat style view](screenshot.png)
 
+Prompt templates can be customized.
+
+![Chat style view](screenshot2.png)
+
 ## How to Use
-#### Configuration files
-**my_prompts.json**  contains all prompts setted with system prompt, actors and names.
-
-<br>
-
-**params.json**  contains all definitions for prompt adjustements and prompt templates templates for formated the prompt.
+#### Configuration files:
+* **my_prompts.json**  Contains all personal prompts definitions. Supports system prompt and an actor system.
+* **params.json**  Contains all definitions for prompt format/template.
 
 #### Execultable Arguments:
 -  --my-prompt *prompt name*            (default: default)
@@ -22,10 +29,8 @@ This is a lightweight terminal interface for chat with llama.cpp server followin
 -  --ip <ip address>                    (default: 127.0.0.1)
 -  --port <port>                        (default: 8080)
 
-The chat guards adds the prompt template tokens into stop words array.
-
 #### Command support:
-To input a command, simply insert `/*command*` followed by the desired command.
+To input a command, simply insert `/command` followed by the desired command.
 
 ##### Command List:
 - **narrator:** Lets to narrator generate a narration.
@@ -55,12 +60,14 @@ To input a command, simply insert `/*command*` followed by the desired command.
 - **rtemplate** Reload current template profile.
 - **stemplate (template name)** Load and set prompt template in runtime.
 
+#### About the chat guards:
+The chat guards adds the prompt template tokens into stop words array. Also all the posible variations for the actors chat tags.
+
 ### Instructions to build
 
     git submodule init
     git submodule update
     make
-
 
 ## **Tested on**
 
