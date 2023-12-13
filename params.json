@@ -3,8 +3,8 @@
 // All prompt templates                  
 /*
 	TYPE:
-		chat :use the chat format into the sent prompt.
-		instruct :sent only content encapsuled between user and assistant.
+		chat :use the chat format into the sent prompt. (ex: User:hi\nAssistant:)
+		instruct: sent only content encapsuled between user and assistant without chat style format.
 	SEQ: Header and Footer for determinated roles.
 		B_SYS and E_SYS: System 
 		B_USER and E_USER: User
@@ -42,6 +42,28 @@
 				"B_ASSISTANT":	"<|assistant|>\n",
 				"EOS":			"<|endoftext|>\n"
 			}
+		},
+		"mistral_v0.2":
+		{
+			"TYPE":"instruct",
+			"SEQ":{
+				"BOS":			"<s>",
+				"B_USER":		"[INST]",
+				"E_USER":		"[/INST]",
+				"B_ASSISTANT":	"",
+				"EOS":			"</s>"
+			}
+		},
+		"mistral_v0.2_chat":
+		{
+			"TYPE":"chat",
+			"SEQ":{
+				"BOS":			"<s>",
+				"B_USER":		"[INST]",
+				"E_USER":		"[/INST]",
+				"B_ASSISTANT":	"",
+				"EOS":			"</s>"
+			}
 		}
 	},
 
@@ -78,6 +100,7 @@
 	        "top_p": 0.5,
 	        "typical_p": 1,
 	        "tfz_z": 1,
+	        "seed":3443,
 	        "repeat_last_n": 256,
 	        "repeat_penalty": 1.18,
 	        "temperature": 0.8,
