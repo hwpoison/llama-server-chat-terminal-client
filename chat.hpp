@@ -14,6 +14,7 @@
 #include "logging.hpp"
 
 #define DEFAULT_FILE_EXTENSION ".json"
+
 using namespace std;
 
 //////////////////////////////////////////////
@@ -21,6 +22,7 @@ using namespace std;
 struct prompt_template_t {
     std::string prompt_type;
 
+    std::string bos; // Beging of string
     std::string begin_system;
     std::string end_system;
 
@@ -28,7 +30,7 @@ struct prompt_template_t {
     std::string end_user;
 
     std::string begin_assistant;
-    std::string eos;
+    std::string eos; // End of string
 };
 
 struct actor_t {
@@ -90,22 +92,22 @@ public:
     // Return chat history + prompt template
     std::string dumpFormatedPrompt() {
         std::string newPrompt;
+        newPrompt+= prompt_template.bos;
         for (const chat_entry_t &entry : history) {
             actor_t actor = actors[entry.actor_name];
             if (actor.role == "user") {
                 newPrompt += prompt_template.begin_user;
-                if(use_chat_tags)newPrompt += actor.name + ":";
+                if(!instruct_mode)newPrompt += actor.name + ":";
                 newPrompt += entry.message_content;
                 newPrompt += prompt_template.end_user;
-            } else if (actor.role == "system" and use_system_prompt) {
+            } else if (actor.role == "system") {
                 newPrompt += prompt_template.begin_system;
-                if(actor.name!="System" and use_chat_tags)
-                    newPrompt += actor.name + ":";
+                if(!instruct_mode) newPrompt += actor.name + ":";
                 newPrompt += entry.message_content;
                 newPrompt += prompt_template.end_system;
             }else{
                 newPrompt += prompt_template.begin_assistant;
-                if(use_chat_tags)newPrompt += actor.name + ":";
+                if(!instruct_mode)newPrompt += actor.name + ":";
                 newPrompt += entry.message_content;
                 newPrompt += prompt_template.eos;
             }
@@ -119,30 +121,31 @@ public:
         actor_t actor = actors[actor_name];
         if (actor.role == "user") {
             footer += prompt_template.begin_user;
-            if(use_chat_tags)footer += actor.name + ":";
+            if(!instruct_mode)footer += actor.name + ":";
             footer += prompt_template.end_user;
         } else if (actor.role == "system") {
             footer += prompt_template.begin_system;
-            if(use_chat_tags)footer += actor.name + ":";
+            if(!instruct_mode)footer += actor.name + ":";           
         } else {
             footer += prompt_template.begin_assistant;
-            if(use_chat_tags)footer += actor.name + ":";
+            if(!instruct_mode)footer += actor.name + ":";
         }
         return footer;
     }
 
     void resetChatHistory(){
         if (history.size() > 1)
-            history.erase(history.begin() + (use_system_prompt?1:0), history.end());
+            history.erase(history.begin() + 1, history.end());
     }
 
     void draw() {
         Terminal::clear();
         for (const chat_entry_t &entry : history) {
+            actor_t actor = actors[entry.actor_name];
             printActorChaTag(entry.actor_name.c_str());
             cout << entry.message_content << "\n";
-            if (use_system_prompt and actors[entry.actor_name].name == "System")
-                cout << "\n";
+            if (actors[entry.actor_name].name == "System")
+                cout << "\n";          
         }
     }
 
@@ -163,16 +166,14 @@ public:
             createActor("System", "system", "green_ul");
             system_prompt = yyjson_get_str(system);
             addNewMessage("System", system_prompt);
-        }else{
-            use_system_prompt = false;
         }
         
         // load actors list
         yyjson_val *actors = yyjson_obj_get(my_prompt, "actors");  // daryl->actors
         if(actors == NULL){
             createActor("User", "user", "blue");
-            user_name = "User";
             createActor("Assistant", "assistant", "pink");
+            user_name = "User";
             assistant_name = "Assistant";
             return true;
         }
@@ -269,8 +270,10 @@ public:
         const char *prompt_type = template_file.get_str(PROMPT_TYPE_);
         if(prompt_type == NULL) return false;
 
-        if(!strcmp(template_file.get_str(PROMPT_TYPE_), "instruct"))
-            use_chat_tags = false;
+        if(!strcmp(template_file.get_str(PROMPT_TYPE_), "instruct")){
+            instruct_mode = true;
+            guards = false;
+        }
 
         const auto loadSeqToken = [&](const char *key, const char *field_key) {
             const char *keys[] = {main_key, prompt_template_name, key, field_key, "\0"};
@@ -278,6 +281,7 @@ public:
             return key_value?key_value:"";
         };
 
+        prompt_template.bos =                loadSeqToken("SEQ", "BOS");
         prompt_template.begin_system =       loadSeqToken("SEQ", "B_SYS");
         prompt_template.end_system =         loadSeqToken("SEQ", "E_SYS");
         prompt_template.begin_user =         loadSeqToken("SEQ", "B_USER");
@@ -359,12 +363,10 @@ public:
     }
 
     bool guards = true;
+    bool instruct_mode = false;
 private:
     std::string user_name;
     std::string assistant_name;
-
-    bool use_chat_tags = true;
-    bool use_system_prompt = true;
 
     std::string system_prompt;
     prompt_template_t prompt_template = {"", "\n", "", "\n", "", "\n"};

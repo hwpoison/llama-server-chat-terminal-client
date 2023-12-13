@@ -40,19 +40,19 @@ int main(int argc, char *argv[]) {
 
     Chat chatContext;
     chatContext.guards = chat_guards;
+    if(!chatContext.loadPromptTemplates(prompt_template_profile)){
+        logging::error("Failed to load the template %s ! Using default empty.", prompt_template_profile);
+        Terminal::pause();
+    }
+
     if(!chatContext.loadUserPromptProfile(my_prompt_profile))
         exit(1);
 
-    chatContext.loadPromptTemplates(prompt_template_profile);
     chatContext.loadParametersSettings(param_profile);
     chatContext.setupStopWords();
 
     std::string userInput, director_input;
     std::string save_folder_path = "saved_chats/";
-
-    // Create the director and narrator actors
-    chatContext.createActor("Director", "system", "yellow");
-    chatContext.createActor("Narrator", "system", "yellow");
 
     Terminal::resetColor();
     Terminal::clear();
@@ -114,11 +114,13 @@ int main(int argc, char *argv[]) {
 
                 // lets narrator describes the context
             } else if (cmd == "/narrator") {
+                chatContext.createActor("Narrator", "system", "yellow");
                 currentActingActor = "Narrator";
                 onceAct = true;
 
                 // as director you can put your prompt
             } else if (cmd == "/director" || cmd == "dir") {
+                chatContext.createActor("Director", "system", "yellow");
                 chatContext.printActorChaTag("Director");
                 std::getline(std::cin, director_input);
                 chatContext.addNewMessage("Director", director_input);
