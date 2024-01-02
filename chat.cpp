@@ -1,7 +1,7 @@
 #include "chat.hpp"
 
 int main(int argc, char *argv[]) {
-    const char* my_prompt_profile = "samantha";
+    const char* my_prompt_profile = "default";
     const char* prompt_template_profile = "empty";
     const char* ipaddr = DEFAULT_IP;
     const char* param_profile = "default";
@@ -41,7 +41,7 @@ int main(int argc, char *argv[]) {
     Chat chatContext;
     chatContext.guards = chat_guards;
     if(!chatContext.loadPromptTemplates(prompt_template_profile)){
-        logging::error("Failed to load the template %s ! Using default empty.", prompt_template_profile);
+        logging::error("Failed to load the template '%s' ! Using default empty.", prompt_template_profile);
         Terminal::pause();
     }
 
@@ -57,12 +57,13 @@ int main(int argc, char *argv[]) {
     Terminal::resetColor();
     Terminal::clear();
 
+    // Control actor talk round
     bool onceAct = false;
     std::string previousActingActor;
     std::string currentActingActor = chatContext.getAssistantName();
 
     while (true) {
-        chatContext.completionBuffer.buffer = "";
+        chatContext.completionBuffer.buffer.clear();
         chatContext.draw();
 
         if(onceAct){
@@ -77,7 +78,7 @@ int main(int argc, char *argv[]) {
         Terminal::resetColor();
         std::getline(std::cin, userInput);
 
-        // Check if there is some command
+        // Command processing
         if (userInput[0] == '/') {
             size_t space = userInput.find(" ");
             std::string cmd = "";
@@ -118,6 +119,18 @@ int main(int argc, char *argv[]) {
                 currentActingActor = "Narrator";
                 onceAct = true;
 
+                // multiline insertion mode
+            } else if (cmd == "/insert" || cmd == "/i") {
+                userInput.clear();
+                Terminal::setTitle("Multiline mode");
+                std::string line;
+                while(1){
+                    std::getline(std::cin, line);
+                    if(line == "EOF" or line == "eof") break;
+                    userInput+= line + "\n";
+                };
+                chatContext.addNewMessage(chatContext.getUserName(), userInput);
+            
                 // as director you can put your prompt
             } else if (cmd == "/director" || cmd == "dir") {
                 chatContext.createActor("Director", "system", "yellow");
@@ -134,7 +147,7 @@ int main(int argc, char *argv[]) {
                 if(arg.find(DEFAULT_FILE_EXTENSION)==string::npos) filename+=DEFAULT_FILE_EXTENSION;
 
                 if(chatContext.saveConversation(save_folder_path + filename))
-                    logging::success("Conversation saved as \"%s\".", filename.c_str());
+                    logging::success("Conversation saved as '%s'.", filename.c_str());
                 else
                     logging::error("Problem saving the conversation.");       
                 Terminal::pause();
@@ -146,18 +159,31 @@ int main(int argc, char *argv[]) {
                 if(arg.find(DEFAULT_FILE_EXTENSION)==string::npos) 
                     filename+=DEFAULT_FILE_EXTENSION;
                 if (chatContext.loadSavedConversation(std::string(save_folder_path + filename)))
-                    logging::success("Conversation loaded from \"%s\".", filename.c_str());
+                    logging::success("Conversation from '%s' loaded.", filename.c_str());
                 else
                     logging::error("Failed to load conversation!");
                 Terminal::pause();
                 continue;
 
-                // load prompt template
+                // load prompt template in runtime
             } else if (cmd == "/stemplate") {
                 if(chatContext.loadPromptTemplates(arg.c_str()))
-                    logging::success("Template loaded from \"%s\".", arg.c_str());
+                    logging::success("Prompt template '%s' loaded.", arg.c_str());
                 else
                     logging::error("Failed to load template!");
+                Terminal::pause();
+                continue;
+
+                // load param profile in runtime
+            } else if (cmd == "/sparam") {
+                if(chatContext.loadParametersSettings(arg.c_str())){
+                    std::string prevPrompt = chatContext.getPrompt();
+                    chatContext.setupStopWords(); 
+                    chatContext.setPrompt(prevPrompt);
+                    logging::success("Param profile '%s' loaded", arg.c_str());
+                }else{
+                    logging::error("Failed to load param profile!");
+                }
                 Terminal::pause();
                 continue;
 
@@ -222,11 +248,12 @@ int main(int argc, char *argv[]) {
                 chatContext.removeLastMessage(1);
                 chatContext.draw();
 
+                // just continue the completation
             } else if (cmd == "/continue") {
                 // ...
 
             } else {
-                logging::error("Wrong cmd!");
+                logging::error("Wrong command!");
                 Terminal::pause();
                 continue;
             }
@@ -250,11 +277,12 @@ int main(int argc, char *argv[]) {
         Response res = chatContext.requestCompletion(ipaddr, DEFAULT_COMPLETION_ENDPOINT, port);
         if (res.Status != 200) {
             if (res.Status == 500)
-                logging::critical("500 Internal serve error!");
+                logging::critical("500 Internal server error!");
             if (res.Status == -1)
                 logging::error("Error to connect, please check server and try again.");
             chatContext.removeLastMessage();
             if(!res.body.empty()) cout << "Server response body:" << res.body << endl;
+            Terminal::setTitle("Completion in error.");
             Terminal::pause();
         }else{
             chatContext.cureCompletionForChat();

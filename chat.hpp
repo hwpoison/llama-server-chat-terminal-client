@@ -14,6 +14,7 @@
 #include "logging.hpp"
 
 #define DEFAULT_FILE_EXTENSION ".json"
+#define MY_PROMPT_FILENAME "my_prompts.json"
 
 using namespace std;
 
@@ -68,6 +69,10 @@ public:
     }
 
     bool removeLastMessage(int nmessages = 1) {
+        if(instruct_mode and history.size() == 1){
+            history.pop_back();
+            return true;
+        }
         if (history.size() == 2) {
             history.pop_back();
             return true;
@@ -150,7 +155,7 @@ public:
     }
 
     bool loadUserPromptProfile(const char *prompt_name) {
-        sjson prompt_file = sjson("my_prompts.json");
+        sjson prompt_file = sjson(MY_PROMPT_FILENAME);
         if(!prompt_file.is_opened())
             return false;
 
@@ -305,9 +310,8 @@ public:
     }
 
     bool createActor(std::string name, const char* role, const char* tag_color){
-        if(actorExists(name)){
+        if(actorExists(name))
             return false;
-        }
         actor_t newActor = { name, role, tag_color };
         actors[newActor.name] = newActor;
         if(guards) addActorStopWords(name);

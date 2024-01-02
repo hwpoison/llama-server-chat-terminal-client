@@ -64,6 +64,17 @@
 				"B_ASSISTANT":	"",
 				"EOS":			"</s>"
 			}
+		},
+		"zephyr":
+		{
+			"TYPE":"chat",
+			"SEQ":{
+				"B_SYS":		"<|system|>\n",
+				"E_SYS":		"</s>\n",
+				"B_USER":		"<|user|>\n",
+				"E_USER":		"</s>\n",
+				"B_ASSISTANT":	"<|assistant|>\n",
+			}
 		}
 	},
 
@@ -87,7 +98,19 @@
 	        "repeat_last_n": 256,
 	        "repeat_penalty": 1.18,
 	        "temperature": 0.7,
-	        "n_predict": 120,
+	        "n_predict": 250,
+	        "stream": true,
+	        "slot_id":0
+	    },
+	    "precision": {
+	        "frecuency_penalty": 0,
+	        "top_k": 40,
+	        "top_p": 0.5,
+	        "stop":["</s>", "<|"],
+	        "n_probs":0,
+	        "repeat_penalty": 1.18,
+	        "temperature": 0.5,
+	        "n_predict": 250,
 	        "stream": true,
 	        "slot_id":0
 	    },

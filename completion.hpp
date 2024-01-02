@@ -64,7 +64,6 @@ static bool completionCallback(const std::string &chunck, const CallbackBus *bus
         Terminal::setTitle(windowTitle);
         return false;
     }
-
     std::cout << token << std::flush;  // write the token in terminal
 
     const_cast<CallbackBus*>(bus)->buffer+=token;

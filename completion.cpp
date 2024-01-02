@@ -12,7 +12,8 @@ bool Completion::loadParametersSettings(const char *profile_name) {
     // Choice the profile entry and work with it
     const char *PARAMETER_PROFILE_[] = {"params_profiles", profile_name, "\0"};
     yyjson_val *parameter_profile = parameters_file.get_value(PARAMETER_PROFILE_);
-
+    if(parameter_profile == NULL) return false;
+    
     yyjson_val *key, *val;
     yyjson_obj_iter iter = yyjson_obj_iter_with(parameter_profile);
 

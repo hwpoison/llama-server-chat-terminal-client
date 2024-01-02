@@ -16,6 +16,12 @@ std::string normalizeText(const std::string& text) {
         found = result.find("\"", found + replacement.length());
     }
 
+    found = result.find('\t');
+    while (found != std::string::npos) {
+        result.replace(found, 1, "\\t");  // Escapa la tabulación
+        found = result.find('\t', found + 2);
+    }
+
     return result;
 }
 
@@ -54,7 +60,7 @@ void printCmdHelp(){
     --my-prompt <my_prompt_name> (default: default)\n \
     --param-profile <profile_name> (default: samantha)\n \
     --prompt-template <template_name> (default: empty)\n \
-    --no-guards (default: true)\n \
+    --no-chat-guards (default: true)\n \
     --ip <ip address> (default: 127.0.0.1)\n \
     --port <port> (default: 8080)" << std::endl;
 }
