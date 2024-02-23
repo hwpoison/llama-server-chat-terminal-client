@@ -10,6 +10,7 @@
     #define Socket_error SOCKET_ERROR
     #define Invalid_socket INVALID_SOCKET
 #else
+    #include <unistd.h>
     #include <sys/types.h>
     #include <sys/socket.h>
     #include <netinet/in.h>
@@ -20,6 +21,7 @@
 #endif
 
 #include "logging.hpp"
+#include "terminal.hpp"
 
 #define BUFFER_SIZE 50000 // 50kb
 

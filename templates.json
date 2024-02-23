@@ -1,0 +1,93 @@
+///////////////////////////////////////////
+// All prompt templates                  
+/*
+	SEQ: Header and Footer for determinated roles. (optionals)
+		B_SYS and E_SYS: System
+		B_USER and E_USER: User
+		B_ASSISTANT and E_ASSISTANT: Assistant
+		EOS: End of text
+*/
+///////////////////////////////////////////
+{
+	"prompt_templates":{
+		"empty":
+		{
+			"SEQ":{
+				"E_SYS":		"\n",
+				"E_USER":		"\n",
+				"EOS":			"\n"
+			}
+		},
+		"chatml":
+		{
+			"SEQ":{
+				"B_SYS":		"<|im_start|>system\n",
+				"E_SYS":		"<|im_end|>\n",
+				"B_USER":		"<|im_start|>user\n",
+				"E_USER":		"<|im_end|>\n",
+				"B_ASSISTANT":	"<|im_start|>assistant\n",
+				"EOS":			"<|im_end|>\n"
+			}
+		},
+		"stablelm":
+		{
+			"SEQ":{
+				"B_USER":		"<|user|>\n",
+				"E_USER":		"<|endoftext|>\n",
+				"B_ASSISTANT":	"<|assistant|>\n",
+				"EOS":			"<|endoftext|>\n"
+			}
+		},
+		"mistral_v0.2":
+		{
+			"SEQ":{
+				"BOS":			"<s>",
+				"B_USER":		"[INST]",
+				"E_USER":		"[/INST]",
+				"B_ASSISTANT":	"",
+				"EOS":			"</s>"
+			}
+		},
+		"tinyllama":
+		{
+			"SEQ":{
+				"B_SYS":		"<|system|>\n",
+				"E_SYS":		"</s>\n",
+				"B_USER":		"<|user|>\n",
+				"E_USER":		"</s>\n",
+				"B_ASSISTANT":	"<|assistant|>\n",
+			}
+		},
+		"tinyllama2":
+		{
+			"SEQ":{
+				"B_SYS":		"<|system|>\n",
+				"E_SYS":		"\n",
+				"B_USER":		"<|user|>\n",
+				"E_USER":		"\n",
+				"B_ASSISTANT":	"<|assistant|>\n",
+			}
+		},
+		"zephyr":
+		{
+			"SEQ":{
+				"B_SYS":		"<|system|>\n",
+				"E_SYS":		"<|endoftext|>\n",
+				"B_USER":		"<|user|>\n",
+				"E_USER":		"<|endoftext|>\n",
+				"B_ASSISTANT":	"<|assistant|>\n",
+				"E_ASSISTANT":   "<|endoftext|>\n"
+			}
+		},
+		"gemma":
+		{
+			"SEQ":{
+				"B_SYS":		"<bos>",
+				"B_USER":		"<start_of_turn>user\n",
+				"E_USER":		"<end_of_turn>\n",
+				"B_ASSISTANT":	"<start_of_turn>model\n",
+				"E_ASSISTANT":   "<end_of_turn>\n"
+			}
+		}
+	}
+}

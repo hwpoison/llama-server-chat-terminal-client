@@ -1,1 +1,1 @@
-cls && make && chat.exe --my-prompt samantha  --param-profile default --prompt-template chat_ggml
+cls && make && chat.exe --prompt samantha  --param-profile creative --prompt-template zephyr

@@ -19,11 +19,12 @@ Prompt templates can be added and customized.
 
 ## How to Use
 #### Configuration files:
-* **my_prompts.json**  Contains all personal prompts definitions. Supports system prompt and an actor system.
-* **params.json**  Contains all definitions for prompt format/template and the parameters profiles.
+* **prompts.json**  Contains all personal prompts definitions. Supports system prompt and an actor system.
+* **params.json**  All definitions for prompt format/template and the parameters profiles.
+* **templates.json**  All prompt templates.
 
 #### Execultable Arguments:
--  --my-prompt *prompt name*            (default: default)
+-  --prompt *prompt name*            (default: default)
 -  --param-profile *profile name*       (default: default)
 -  --prompt-template *prompt template*  (default: empty)
 -  --no-chat-guards: Disable the chat guards (default: false)
@@ -33,18 +34,21 @@ Prompt templates can be added and customized.
 #### Command support:
 To input a command, simply insert `/command` followed by the desired command.
 
-##### Command List:
+#### Command List:
  Conversation manipulation:
 - **narrator:** Lets to narrator generate a narration.
 - **director:** Switch to director mode input.
-- **actor:** Create a new character or use an existent into convesation and lets it talks. (ex: /actor Einstein).
+- **actor / now :** Choice who will talk now. If doesn't exists it will be created. (ie: /now  Einstein)
 - **as:** Pretend to be an actor and prompt it. (ex: /as Einstein)
-- **talkto:** Talk to a determinated character. It will swtich the current talking actor. (ex: /talkto Monica)
+- **talkto:** Talk to a determinated character. It will swtich the current talking actor. (ie: /talkto Monica)
 - **insert:** Multiline mode insertion. For finish it and submit write "EOF" or "eof" and then enter.
 - **retry / r:** Retry the last completion.
 - **continue:** Continue the completion without intervention. (The assistant will continue talking)
 - **undolast:** Undo only the last completion.
 - **undo / u:** Undo the last completion and user input.
+
+Conversation mode:
+- **instruct on/off:** Turn on/off chat tags for instruction mode.
 
 Conversation saving:
 - **save (chatname):** Save the chat. (without extension)
@@ -58,12 +62,16 @@ Manage configurations:
 - **lactors:** Print current actors.
 - **lparams:** Print the current parameters.
 - **rparams** Reload current parameter profile.
-- **sparam (parameter profile name)** Load and set param profile in runtime.
 - **rtemplate** Reload current template profile.
-- **stemplate (template name)** Load and set prompt template in runtime.
+- **sparam (parameter profile name)** Load and set param profile in runtime from param.json.
+- **stemplate (template name)** Load and set prompt template in runtime from template.json.
+- **sprompt (prompt name)** Load and set custom prompt in runtime from prompt.json.
 
 #### About the chat guards:
 The chat guards adds the prompt template tokens into stop words array. Also all the posible variations for the actors chat tags. 
+
+#### Shortcut:
+You can stop the completion using CTRL+C signal.
 
 ### Instructions to build
 
