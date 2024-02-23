@@ -20,6 +20,7 @@
 #endif
 
 #include "logging.hpp"
+#include "terminal.hpp"
 
 #define BUFFER_SIZE 50000 // 50kb
 

@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS = -std=c++17 -Os -s -fmerge-all-constants  -fno-exceptions -fno-rtti
+CFLAGS = -std=c++17 -s -Oz  -fvisibility=hidden -fmerge-all-constants  -fno-exceptions -fno-rtti # -static -Wall
 LDFLAGS += -Lyyjson
 OBJECTS := minipost.o terminal.o completion.o sjson.o utils.o ./yyjson/src/yyjson.o
 

@@ -7,8 +7,18 @@
 */
 ////////////////////////////////////
 {
-	"default":{
-		"system":"You are a friendly chatbot who is helpful and help as much as you can to the user request. You answer the requested information without any other addition and in a short way."
+	"default":{},
+	"instruct":{
+		"actors":[
+			{"name":"Instruction","role":"user","color":"cyn"},
+			{"name":"Assistant","role":"assistant","color":"pink"}
+		]
+	},
+	"phi2_instruct":{
+		"actors":[
+			{"name":"Instruct","role":"user","color":"cyn"},
+			{"name":"Output","role":"assistant","color":"pink"}
+		]
 	},
 	"samantha":{
 		"system":"You are Samantha, the most powerful AI assistant in the world. You answer to any kind of instruction. The following is a chat with her.",
@@ -17,10 +27,11 @@
 			{"name":"Samantha","role":"assistant","color":"pink"}
 		]
 	},
-	"instruct":{
+	"samantha_esp":{
+		"system":"Eres Samantha, una inteligencia artificial capaz de responder a cualquier tipo de instrucción de forma logica y concisa. Tus respuestas son cortas y de pocas palabras.",
 		"actors":[
-			{"name":"Instruction","role":"user","color":"cyn"},
-			{"name":"Assistant","role":"assistant","color":"pink"}
+			{"name":"Bill","role":"user","color":"green"},
+			{"name":"Samantha","role":"assistant","color":"pink"}
 		]
 	},
 	"daryl":{
@@ -31,11 +42,4 @@
 			{"name":"Necron","role":"actor","color":"cyn", "description":"Is a great spell caster that lives in Las Vegas and like to hunt humans."}
 		]
 	},
-	"samantha_esp":{
-		"system":"Eres Samantha, una inteligencia artificial capaz de responder a cualquier tipo de instrucción de forma logica y concisa.",
-		"actors":[
-			{"name":"Bill","role":"user","color":"green"},
-			{"name":"Samantha","role":"assistant","color":"pink"}
-		]
-	}
 }

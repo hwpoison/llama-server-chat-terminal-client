@@ -13,7 +13,7 @@ bool httpRequest::close_connection(SocketType connection) {
 #ifdef __WIN32__
   closesocket(connection);
 #else
-  // close(connection);
+  close(connection);
 #endif
   logging::info("Conection closed");
   return true;
@@ -22,7 +22,6 @@ bool httpRequest::close_connection(SocketType connection) {
 bool httpRequest::send_data(SocketType connection, const char *data) {
   if (send(connection, data, strlen(data), 0) == Socket_error) {
     logging::error("send() SOCKET ERROR");
-    // Al finalizar, verifica si hubo un error
     get_last_error();
     this->close_connection(connection);
     return 1;
@@ -65,6 +64,7 @@ Response httpRequest::post(
   if (!debug) {
     logging::disable_msg();
   }
+
   Response response;
   logging::info("Connecting to %s to port %d", ipaddr,
                 port);
@@ -117,6 +117,7 @@ Response httpRequest::post(
 
   if (bytesRead == Socket_error) logging::error("Error receiving data.");
 
+  close_connection(connection);
   return response;
 };
 
@@ -170,7 +171,7 @@ int httpRequest::get_last_error() {
   }
   return errorCode;
 #else
-  perror("Error caused by ");
+  perror("Error caused by "); // ??
   return 1;
 #endif
 }
