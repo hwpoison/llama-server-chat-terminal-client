@@ -41,7 +41,7 @@ To input a command, simply insert `/command` followed by the desired command.
 - **actor / now :** Choice who will talk now. If doesn't exists it will be created. (ie: /now  Einstein)
 - **as:** Pretend to be an actor and prompt it. (ex: /as Einstein)
 - **talkto:** Talk to a determinated character. It will swtich the current talking actor. (ie: /talkto Monica)
-- **insert:** Multiline mode insertion. For finish it and submit write "EOF" or "eof" and then enter.
+- **insert / i:** Multiline mode insertion. For finish it and submit write "EOF" or "eof" and then enter.
 - **retry / r:** Retry the last completion.
 - **continue:** Continue the completion without intervention. (The assistant will continue talking)
 - **undolast:** Undo only the last completion.

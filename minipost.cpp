@@ -68,7 +68,7 @@ Response httpRequest::post(
   Response response;
   logging::info("Connecting to %s to port %d", ipaddr,
                 port);
-  logging::info("Sending:", payload);
+  logging::info("Sending:", payload.c_str());
   SocketType connection =
     connect_to(ipaddr, port);
   logging::info("Socket status: %d", connection);
