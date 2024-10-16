@@ -11,7 +11,7 @@
 	        "frecuency_penalty": 0,
 	        "top_k": 40,
 	        "top_p": 0.5,
-	        "stop":["</s>", "<|"],
+	        "stop":["</s>","<|end|>","<|eot_id|>","<|end_of_text|>","<|im_end|>","<|EOT|>","<|END_OF_TURN_TOKEN|>","<|end_of_turn|>","<|endoftext|>","assistant","user"],
 	        "typical_p": 1,
 	        "tfz_z": 1,
 	        "n_probs":0,

@@ -15,7 +15,6 @@
 #define DEFAULT_FILE_EXTENSION ".json"
 #define MY_PROMPT_FILENAME "prompts.json"
 #define TEMPLATES_FILENAME "templates.json"
-using namespace std;
 
 //////////////////////////////////////////////
 
@@ -31,11 +30,14 @@ public:
     }
 
     bool removeLastMessage(int nmessages = 1) {
-        if(instruct_mode and messages.size() == 1){
+        size_t message_count = messages.size();
+
+        if(instruct_mode && message_count == 1){
             messages.pop_back();
             return true;
         }
-        if (messages.size() == 2) {
+
+        if (message_count == 2) {
             if(using_system_prompt){
                 messages.pop_back();
             }else{
@@ -43,7 +45,9 @@ public:
             }
             return true;
         };
-        if (messages.size() > 2) {
+
+        if (message_count > 2) {
+            nmessages = std::min(nmessages, static_cast<int>(message_count));
             for (int i = 0; i < nmessages; i++) messages.pop_back();
             return true;
         }
@@ -66,23 +70,27 @@ public:
 
     void draw() {
         Terminal::clear();
-        for (const message_entry_t &entry : messages) {
+
+        for (const message_entry_t& entry : messages) {
             printActorChaTag(entry.participant_info->name);
-            cout << entry.content << "\n";
-            if (entry.participant_info->name== "System")
-                cout << "\n";          
+            std::cout << entry.content << "\n";
+            
+            if (entry.participant_info->name == "System") {
+                std::cout << "\n";
+            }
         }
     }
 
-    bool loadUserPrompt(const char* prompt_name) {
+
+    bool loadUserPrompt(std::string_view prompt_name) {
         sjson prompt_file = sjson(MY_PROMPT_FILENAME);
         if(!prompt_file.is_opened())
             return false;
 
-        const char* prompt_[] = {prompt_name, "\0"}; // file -> daryl
+        const char* prompt_[] = {prompt_name.data(), "\0"}; // file -> daryl
         yyjson_val *my_prompt = prompt_file.get_value(prompt_);
         if(my_prompt==NULL){
-            logging::error("Prompt \"%s\" not found.", prompt_name);
+            logging::error("Prompt \"%s\" not found.", prompt_name.data());
             return false;
         }
 

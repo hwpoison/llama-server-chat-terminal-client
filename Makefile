@@ -1,6 +1,6 @@
 CC = g++
-CPPFLAGS= -std=c++17 -s -Os -fvisibility=hidden -fmerge-all-constants  -fno-exceptions # -static -Wall
-SFLAGS=-static-libgcc -static-libstdc++
+CPPFLAGS= -std=c++17 -s -Os -fvisibility=hidden -fmerge-all-constants -fno-exceptions
+SFLAGS=-static-libgcc -static-libstdc++ -static
 LDFLAGS += -Lyyjson
 OBJECTS := minipost.o terminal.o completion.o sjson.o utils.o ./yyjson/src/yyjson.o
 
@@ -14,10 +14,10 @@ else
 endif
 
 chat: $(OBJECTS)
-	$(CC) chat.cpp $(OBJECTS) -o chat $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) $(DFLAGS) 
+	$(CC) chat.cpp $(OBJECTS) -o chat $(CPPFLAGS) $(LDFLAGS)
 
 static: $(OBJECTS)
-	$(CC) chat.cpp $(OBJECTS) -o chat $(CFLAGS) $(CPPFLAGS) $(SFLAGS) $(LDFLAGS) $(DFLAGS) 
+	$(CC) chat.cpp $(OBJECTS) -o chat $(CPPFLAGS) $(SFLAGS) $(LDFLAGS) 
 
 clean:
 	$(CLEAN_COMMAND) *.o $(YYJSON_SRC_DIR)*.o chat.exe

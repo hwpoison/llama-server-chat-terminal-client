@@ -52,7 +52,7 @@ bool Completion::loadParametersSettings(std::string_view profile_name) {
 }
 
 // load parameters from params.json
-bool Completion::loadPromptTemplates(const char* prompt_template_name) {
+bool Completion::loadPromptTemplates(std::string_view prompt_template_name) {
     sjson templates_fp = sjson(TEMPLATES_FILENAME);
     if(!templates_fp.is_opened())
         return false;
@@ -60,7 +60,7 @@ bool Completion::loadPromptTemplates(const char* prompt_template_name) {
     const char *main_key = "prompt_templates";
     
     const auto loadSeqToken = [&](const char *key, const char *field_key) {
-        const char *keys[] = {main_key, prompt_template_name, key, field_key, "\0"};
+        const char *keys[] = {main_key, prompt_template_name.data(), key, field_key, "\0"};
         const char* key_value = templates_fp.get_str(keys);
         return key_value?key_value:"";
     };
@@ -115,7 +115,6 @@ std::string Completion::dumpJsonPayload() {
     free(const_cast<char*>(json));
     return result;
 }
-
 
 Response Completion::requestCompletion(
     const char* ipaddr, const int16_t port) 

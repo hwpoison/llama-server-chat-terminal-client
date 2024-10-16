@@ -48,6 +48,16 @@
 				"EOS":			"</s>"
 			}
 		},
+		"mistral_v0.2_chat":
+		{
+			"SEQ":{
+				"BOS":			"<s>",
+				"B_USER":		"[INST]",
+				"E_USER":		"[/INST]",
+				"B_ASSISTANT":	"",
+				"EOS":			"</s>"
+			}
+		},
 		"tinyllama":
 		{
 			"SEQ":{
@@ -68,6 +78,14 @@
 				"B_ASSISTANT":	"<|assistant|>\n",
 			}
 		},
+		"phi3":
+		{
+			"SEQ":{
+				"B_USER":		"<|user|>\n",
+				"E_USER":		"<|end|>\n",
+				"B_ASSISTANT":	"<|assistant|>\n",
+			}
+		},
 		"zephyr":
 		{
 			"SEQ":{
@@ -79,14 +97,23 @@
 				"E_ASSISTANT":   "<|endoftext|>\n"
 			}
 		},
-		"gemma":
-		{
+		"gemma2b":{
 			"SEQ":{
-				"B_SYS":		"<bos>",
-				"B_USER":		"<start_of_turn>user\n",
-				"E_USER":		"<end_of_turn>\n",
-				"B_ASSISTANT":	"<start_of_turn>model\n",
-				"E_ASSISTANT":   "<end_of_turn>\n"
+				"BOS":"<bos>",
+				"B_USER":"<start_of_turn>",
+				"E_USER":"<end_of_turn>",
+				"B_ASSISTANT":"<start_of_turn>model"
+			}
+		},
+		"llama3.2":{
+		    "SEQ":{
+				"B_SYS":		"<|begin_of_text|><|start_header_id|>system<|end_header_id|>",
+				"E_SYS":		"\n",
+				"B_USER":		"<|start_header_id|>user<|end_header_id|>\n\n",
+				"E_USER": 		"<|eot_id|>",
+				"B_ASSISTANT":	"<|start_header_id|>assistant<|end_header_id|>\n",
+				"E_ASSISTANT": 	"<|eot_id|>"
+				
 			}
 		}
 	}

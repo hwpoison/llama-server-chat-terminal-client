@@ -58,7 +58,7 @@ static void completionSignalHandler(int signum) {
 
 static bool completionCallback(const std::string &chunck, const CallbackBus *bus) {
     if (stopCompletionFlag) {
-        Terminal::setTitle("Interrupted by user");
+        Terminal::setTitle("Completion interrupted by user");
         stopCompletionFlag = false;
         completionInProgress = false;
         return false;
@@ -106,7 +106,7 @@ static bool completionCallback(const std::string &chunck, const CallbackBus *bus
 
 class Completion {
 public:
-    Completion(){};//setPrompt("");};
+    Completion(){};
 
     bool loadParametersSettings(std::string_view profile_name);
 
@@ -124,7 +124,7 @@ public:
         participants[info.name] = info;
     }
 
-    bool loadPromptTemplates(const char* prompt_template_name);
+    bool loadPromptTemplates(std::string_view prompt_template_name);
 
     std::string dumpLegacyPrompt();
 
@@ -140,7 +140,7 @@ private:
 
     prompt_template_t prompt_template = {"", "\n", "", "\n", "", "\n"};
 
-    AnyMap<std::string> parameters;
+    Dict<std::string> parameters;
 
     std::vector<std::string> stop_words;
 

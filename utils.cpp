@@ -64,3 +64,35 @@ void printCmdHelp(){
     --ip <ip address> (default: 127.0.0.1)\n \
     --port <port> (default: 8080)" << std::endl;
 }
+
+
+void printChatHelp() {
+    std::cout << "Conversation manipulation:\n \
+    /narrator: Lets the narrator generate a narration.\n \
+    /director: Switch to director mode input.\n \
+    /actor / now: Choose who will talk now. If the actor doesn't exist, it will be created. (e.g., /now Einstein)\n \
+    /as: Pretend to be an actor and prompt it. (e.g., /as Einstein)\n \
+    /talkto: Talk to a specific character. It will switch the current talking actor. (e.g., /talkto Monica)\n \
+    /insert / i: Multiline mode insertion. To finish and submit, write \"EOL\" or \"eol\" and then press enter.\n \
+    /retry / r: Retry the last completion.\n \
+    /continue: Continue the completion without intervention. (The assistant will continue talking)\n \
+    /undolast: Undo only the last completion.\n \
+    /undo / u: Undo the last completion and user input.\n\n \
+Conversation mode:\n \
+    /instruct on/off: Turn on/off chat tags for instruction mode.\n\n \
+Conversation saving:\n \
+    /save (chatname): Save the chat (without extension).\n \
+    /load (chatname): Load a previously saved chat.\n\n \
+Manage configurations:\n \
+    /redraw: Redraw the chat content.\n \
+    /reset: Reset the entire chat.\n \
+    /quit / q: Exit the program.\n \
+    /lprompt: Print the current prompt.\n \
+    /lactors: Print current actors.\n \
+    /lparams: Print the current parameters.\n \
+    /rparams: Reload the current parameter profile.\n \
+    /rtemplate: Reload the current template profile.\n \
+    /sparam (parameter profile name): Load and set param profile in runtime from param.json.\n \
+    /stemplate (template name): Load and set prompt template in runtime from template.json.\n \
+    /sprompt (prompt name): Load and set custom prompt in runtime from prompt.json.\n\n" << std::endl;
+}

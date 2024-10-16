@@ -24,6 +24,8 @@
 #include "terminal.hpp"
 
 #define BUFFER_SIZE 50000 // 50kb
+#define HTTP_INTERNAL_ERROR 500
+#define HTTP_OK 200
 
 // JSON Type
 typedef std::string json;

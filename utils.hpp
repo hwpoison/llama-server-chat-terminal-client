@@ -5,6 +5,7 @@
 #include <cstring>
 #include <any>
 #include <map> 
+#include <ctime>
 
 std::string normalizeText(const std::string& text);
 
@@ -18,9 +19,11 @@ const char *get_arg_value(int argc, char **argv, const char *target_arg);
 
 void printCmdHelp();
 
+void printChatHelp();
+
 // a dict like python
 template<typename keyT>
-class AnyMap {
+class Dict {
 public:
     template<typename valueT>
     void set(keyT key, valueT value){
