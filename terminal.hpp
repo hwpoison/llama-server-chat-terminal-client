@@ -4,12 +4,12 @@
 
 #include "colors.h"
 #ifdef __WIN32__
-#include <windows.h>
+    #include <windows.h>
 #endif
 
 class Terminal {
 public:
-    static void setTitle(std::string titleContent);
+    static void setTitle(std::string_view titleContent);
     static void resetColor();
     static void pause();
     static void resetCursor();

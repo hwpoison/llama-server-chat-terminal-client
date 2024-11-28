@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
     std::string userInput, director_input;
 
     // Load prompt template
-    if(prompt_template == "empty"){
+    if(prompt_template != "empty"){
         if(!chatContext.loadPromptTemplates(prompt_template)){
             logging::error("Failed to load the template '%s' ! Using default empty.", prompt_template);
             Terminal::pause();
@@ -131,8 +131,12 @@ int main(int argc, char *argv[]) {
                 if(arg == "on"){
                     chatContext.instruct_mode = true;
                 }
-                if(arg == "off"){
+                else if(arg == "off"){
                     chatContext.instruct_mode = false;
+                }else{
+                    logging::warn("Invalid argument: %s. Expected 'on' or 'off'.", arg.c_str());
+                    Terminal::pause();
+                    continue;
                 }
                 logging::success("Instruct mode %s", chatContext.instruct_mode?"ON":"OFF");
                 Terminal::pause();
@@ -144,6 +148,7 @@ int main(int argc, char *argv[]) {
                 chatContext.printActorChaTag(arg);
                 std::getline(std::cin, director_input);
                 chatContext.addNewMessage(arg, director_input);
+                continue;
 
                 // talk to an specific actor
             } else if (cmd == "/talkto") {
@@ -198,7 +203,7 @@ int main(int argc, char *argv[]) {
                 std::string filename = arg;
                 if(arg.find(DEFAULT_FILE_EXTENSION)==std::string::npos) 
                     filename+=DEFAULT_FILE_EXTENSION;
-                if (chatContext.loadSavedConversation(std::string(save_folder_path + filename)))
+                if (chatContext.loadSavedConversation(save_folder_path + filename))
                     logging::success("Conversation from '%s' loaded.", filename.c_str());
                 else
                     logging::error("Failed to load conversation!");

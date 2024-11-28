@@ -48,15 +48,15 @@ public:
 
         if (message_count > 2) {
             nmessages = std::min(nmessages, static_cast<int>(message_count));
-            for (int i = 0; i < nmessages; i++) messages.pop_back();
+            messages.erase(messages.end() - nmessages, messages.end());
             return true;
         }
         return false;
     }
 
 
-    void updateMessageContent(int number, const std::string& newContent){
-        messages[number].content = newContent;
+    void updateMessageContent(int number, std::string_view newContent) {
+        messages[number].content.assign(newContent);
     }
 
     void resetChatHistory(){ 

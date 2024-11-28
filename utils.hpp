@@ -7,11 +7,11 @@
 #include <map> 
 #include <ctime>
 
-std::string normalizeText(const std::string& text);
+std::string normalizeText(std::string_view text);
 
-std::string toUpperCase(const std::string& input);
+std::string toUpperCase(std::string_view input);
 
-std::string toLowerCase(const std::string& input);
+std::string toLowerCase(std::string_view input);
 
 const std::string getDate();
 

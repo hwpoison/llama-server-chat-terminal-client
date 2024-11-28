@@ -84,7 +84,7 @@
 
 namespace ANSIColors {
     
-    inline const char* all_colors[][NCOLORS] = {
+    constexpr const char* all_colors[][2] = {
         {"magenta" , MAG},
         {"pink" , MAG},
         {"red", RED},

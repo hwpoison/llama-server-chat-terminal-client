@@ -1,12 +1,14 @@
 #include "terminal.hpp"
 
-void Terminal::setTitle(std::string titleContent) {
-  #ifdef __WIN32__
-    std::system(std::string("title " + titleContent).c_str());
-  #endif
+void Terminal::setTitle(std::string_view titleContent) {
+#ifdef __WIN32__
+    SetConsoleTitleA(titleContent.data());
+#endif
 }
 
-void Terminal::resetColor() { std::cout << ANSI_COLOR_RESET; }
+void Terminal::resetColor() { 
+  std::cout << ANSI_COLOR_RESET; 
+}
 
 void Terminal::pause() {
     std::cout << "Press a key to continue...";
@@ -15,26 +17,22 @@ void Terminal::pause() {
 
 void Terminal::resetCursor() {
 #ifdef __WIN32__
-  COORD cursorPosition;
-  cursorPosition.X = 0;
-  cursorPosition.Y = 0;
-  SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), cursorPosition);
+    COORD cursorPosition = {0, 0};
+    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), cursorPosition);
 #endif
 }
 
 void Terminal::clear() {
 #ifdef __WIN32__
-  std::system("cls");
-  // resetCursor();
+    std::system("cls");
 #else
-  system("clear");
+    std::system("clear");
 #endif
 }
 
 void Terminal::setupEncoding() {
-// Set utf-8 support for windows
 #ifdef __WIN32__
-  SetConsoleOutputCP(CP_UTF8);
-  SetConsoleCP(CP_UTF8);
+    SetConsoleOutputCP(CP_UTF8);
+    SetConsoleCP(CP_UTF8);
 #endif
 }

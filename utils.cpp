@@ -1,38 +1,35 @@
 #include "utils.hpp"
 
-std::string normalizeText(const std::string& text) {
-    std::string result = text;
-    std::string replacement = "\\n";
-
-    size_t found = result.find("\n");
-    while (found != std::string::npos) {
-        result.replace(found, 1, replacement);
-        found = result.find("\n", found + replacement.length());
-    }
-
-    found = result.find("\"");
-    while (found != std::string::npos) {
-        result.replace(found, 1, "\\\"");
-        found = result.find("\"", found + replacement.length());
-    }
-
-    found = result.find('\t');
-    while (found != std::string::npos) {
-        result.replace(found, 1, "\\t");  // Escapa la tabulación
-        found = result.find('\t', found + 2);
+std::string normalizeText(std::string_view text) {
+    std::string result;
+    result.reserve(text.size() * 1.1);
+    for (char ch : text) {
+        switch (ch) {
+            case '\n':
+                result.append("\\n");
+                break;
+            case '"':
+                result.append("\\\"");
+                break;
+            case '\t':
+                result.append("\\t");
+                break;
+            default:
+                result.push_back(ch);
+        }
     }
 
     return result;
 }
 
-std::string toUpperCase(const std::string& input) {
-    std::string result = input;
+std::string toUpperCase(std::string_view input) {
+    std::string result(input);
     std::transform(result.begin(), result.end(), result.begin(), ::toupper);
     return result;
 }
 
-std::string toLowerCase(const std::string& input) {
-    std::string result = input;
+std::string toLowerCase(std::string_view input) {
+    std::string result(input);
     std::transform(result.begin(), result.end(), result.begin(), ::tolower);
     return result;
 }
