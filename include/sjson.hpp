@@ -3,7 +3,9 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include "yyjson/src/yyjson.h"
+extern "C" {
+    #include "yyjson.h"
+}
 
 // basic wrapper for yyjson
 class sjson {

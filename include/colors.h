@@ -106,7 +106,7 @@ namespace ANSIColors {
         }
         return "";
     }
-    inline const char* getRandColor(){
+    inline const char* getRandColor(){ // of course, "random"
         static int ncolor = 0;
 
         return all_colors[ncolor++ % NCOLORS][0];

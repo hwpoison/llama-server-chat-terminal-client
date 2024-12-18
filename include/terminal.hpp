@@ -11,8 +11,9 @@ class Terminal {
 public:
     static void setTitle(std::string_view titleContent);
     static void resetColor();
-    static void pause();
     static void resetCursor();
+    static void resetAll();
+    static void pause();
     static void clear();
     static void setupEncoding();
 };

@@ -1,11 +1,12 @@
 .vscode/
 saved_chats/
 build/
+yyjson/
+dist/
 *.o
 *.exe
 *.zip
 *_test*
 *.lnk
-*.bat
 *.txt
 *.swp

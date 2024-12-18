@@ -78,14 +78,11 @@ bool Completion::loadPromptTemplates(std::string_view prompt_template_name) {
 }
 
 // compose json to send
-std::string Completion::dumpJsonPayload() {
+std::string Completion::dumpJsonPayload(std::string prompt_content) {
     yyjson_mut_doc *doc = yyjson_mut_doc_new(NULL);
     yyjson_mut_val *root = yyjson_mut_obj(doc);
     yyjson_mut_doc_set_root(doc, root);
-    
-    // prompt content
-    std::string legacy_prompt = dumpLegacyPrompt();
-    yyjson_mut_obj_add_str(doc, root, "prompt", legacy_prompt.c_str());
+    yyjson_mut_obj_add_str(doc, root, "prompt", prompt_content.c_str());
  
     // stop word list
     const char **stop_word_arr = new const char *[stop_words.size()];
@@ -117,10 +114,10 @@ std::string Completion::dumpJsonPayload() {
 }
 
 Response Completion::requestCompletion(
-    const char* ipaddr, const int16_t port) 
+    const char* ipaddr, const int16_t port, std::string prompt) 
 {
     completionInProgress = true;
-    return Req.post(ipaddr, port, DEFAULT_COMPLETION_ENDPOINT, dumpJsonPayload(), completionCallback, &completionBuffer);
+    return Req.post(ipaddr, port, DEFAULT_COMPLETION_ENDPOINT, dumpJsonPayload(prompt), completionCallback, &completionBuffer);
 }
 
 prompt_template_t& Completion::getTemplates(){
@@ -129,33 +126,4 @@ prompt_template_t& Completion::getTemplates(){
 
 void Completion::addStopWord(std::string word){
     stop_words.push_back(word);
-}
-
-// Return legacy prompt with applied prompt template
-std::string Completion::dumpLegacyPrompt(){
-    std::string newPrompt;
-    newPrompt+= prompt_template.bos;
-    for (size_t i = 0; i < messages.size(); ++i) {
-        const message_entry_t& entry = messages[i];
-        bool is_last = i == messages.size() - 1;
-        std::string tag = entry.participant_info->name + ":";
-        if (entry.participant_info->role == "user") {
-            newPrompt += prompt_template.begin_user;
-            if(!instruct_mode)newPrompt += tag;
-            newPrompt += entry.content;
-            if(!is_last)newPrompt += prompt_template.end_user;
-        } else if (entry.participant_info->role == "system") {
-            newPrompt += prompt_template.begin_system;
-            newPrompt += entry.content;
-            newPrompt += prompt_template.end_system;
-        }else{
-            newPrompt += prompt_template.begin_assistant;
-            if(!instruct_mode)newPrompt += tag;
-            newPrompt += entry.content;
-            if(!is_last)newPrompt += prompt_template.end_assistant;
-            if(!is_last)newPrompt += prompt_template.eos;
-        }
-    };
-
-    return newPrompt;
 }

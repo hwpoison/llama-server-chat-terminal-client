@@ -44,6 +44,7 @@ To input a command, simply insert `/command` followed by the desired command.
 - **insert / i:** Multiline mode insertion. For finish it and submit write "EOL" or "eol" and then enter.
 - **retry / r:** Retry the last completion.
 - **continue:** Continue the completion without intervention. (The assistant will continue talking)
+- **edit:** Edit the assistant last message to re-submit it.
 - **undolast:** Undo only the last completion.
 - **undo / u:** Undo the last completion and user input.
 
@@ -66,6 +67,7 @@ Manage configurations:
 - **rtemplate** Reload current template profile.
 - **sparam (parameter profile name)** Load and set param profile in runtime from param.json.
 - **stemplate (template name)** Load and set prompt template in runtime from template.json.
+- **ssystem (input new line)** Set new system prompt (from begin).
 - **sprompt (prompt name)** Load and set custom prompt in runtime from prompt.json.
 
 #### About the chat guards:
@@ -78,7 +80,7 @@ You can stop the completion using CTRL+C signal.
 
     git submodule init
     git submodule update
-    make
+    make static
 
 ## **Tested on**
 

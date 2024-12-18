@@ -19,21 +19,6 @@
 extern bool stopCompletionFlag;
 extern bool completionInProgress;
 
-struct participant_t {
-    std::string name;
-    std::string role;
-    std::string tag_color;
-};
-
-struct message_entry_t {
-    message_entry_t(participant_t *participant_info, std::string content) : participant_info(participant_info), content(content) {}
-    participant_t *participant_info;
-    std::string content;
-};
-
-typedef std::map<std::string, participant_t> participants_t;
-typedef std::vector<message_entry_t> messages_t;
-
 struct prompt_template_t {
     std::string prompt_type;
 
@@ -110,29 +95,17 @@ public:
 
     bool loadParametersSettings(std::string_view profile_name);
 
-    std::string dumpJsonPayload();
+    std::string dumpJsonPayload(std::string prompt);
 
-    Response requestCompletion(const char* ipaddr, const int16_t port);
+    Response requestCompletion(const char* ipaddr, const int16_t port, std::string prompt);
 
     prompt_template_t& getTemplates();
 
-    participants_t& getParticipants();
-
     void addStopWord(std::string word);
-
-    void addParticipant(participant_t& info){
-        participants[info.name] = info;
-    }
 
     bool loadPromptTemplates(std::string_view prompt_template_name);
 
-    std::string dumpLegacyPrompt();
-
     CallbackBus completionBuffer = {"", true};
-
-    bool instruct_mode = false;
-    messages_t messages;
-    participants_t participants;
 
 private:
 

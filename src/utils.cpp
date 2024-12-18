@@ -72,6 +72,7 @@ void printChatHelp() {
     /talkto: Talk to a specific character. It will switch the current talking actor. (e.g., /talkto Monica)\n \
     /insert / i: Multiline mode insertion. To finish and submit, write \"EOL\" or \"eol\" and then press enter.\n \
     /retry / r: Retry the last completion.\n \
+    /edit: Edit the assistant last message to re-submit it. \n \
     /continue: Continue the completion without intervention. (The assistant will continue talking)\n \
     /undolast: Undo only the last completion.\n \
     /undo / u: Undo the last completion and user input.\n\n \
@@ -91,5 +92,7 @@ Manage configurations:\n \
     /rtemplate: Reload the current template profile.\n \
     /sparam (parameter profile name): Load and set param profile in runtime from param.json.\n \
     /stemplate (template name): Load and set prompt template in runtime from template.json.\n \
+    /ssystem (new system prompt): Set new system prompt (from begin).\n \
     /sprompt (prompt name): Load and set custom prompt in runtime from prompt.json.\n\n" << std::endl;
+
 }

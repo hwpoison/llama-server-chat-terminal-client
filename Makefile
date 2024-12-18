@@ -1,23 +1,44 @@
 CC = g++
-CPPFLAGS= -std=c++17 -s -Os -fvisibility=hidden -fmerge-all-constants -fno-exceptions
-SFLAGS=-static-libgcc -static-libstdc++ -static
-LDFLAGS += -Lyyjson
-OBJECTS := minipost.o terminal.o completion.o sjson.o utils.o ./yyjson/src/yyjson.o
+CPPFLAGS= -std=c++17 -s -Os -fvisibility=hidden -fmerge-all-constants -fno-exceptions -Iinclude -I./yyjson/src
+SFLAGS= -static-libgcc -static-libstdc++ -static
+LDFLAGS += -Lyyjson  
+OBJECTS := build/minipost.o build/terminal.o build/completion.o build/sjson.o build/utils.o build/chat.o build/yyjson.o
 
+COPY_FILES = $(if $(filter Windows_NT, $(OS)), \
+               copy $(subst /,\,$(1)) $(subst /,\,$(2)), \
+               cp $(1) $(2))
+
+
+# copy function for windows and linux
 ifeq ($(OS),Windows_NT)
 	LDFLAGS += -lws2_32
 	CLEAN_COMMAND := del /F /Q
-	YYJSON_SRC_DIR=yyjson\\src\\
+	MKDIR = if not exist $(subst /,\\,$1) mkdir $(subst /,\\,$1)
 else
 	CLEAN_COMMAND := rm -f
-	YYJSON_SRC_DIR=yyjson/src/
+	MKDIR = mkdir -p $1
 endif
 
+copy_config:
+	$(call COPY_FILES, config/*.*, dist/)
+
+build/%.o: src/%.cpp
+	$(call MKDIR,build)
+	$(CC) -c $< -o $@ $(CPPFLAGS)
+
+build/yyjson.o: yyjson/src/yyjson.c
+	$(call MKDIR,build)
+	$(CC) -c $< -o $@ $(CPPFLAGS)
+
 chat: $(OBJECTS)
-	$(CC) chat.cpp $(OBJECTS) -o chat $(CPPFLAGS) $(LDFLAGS)
+	$(call MKDIR,dist)
+	$(CC) src/main.cpp $(OBJECTS) -o dist/chat $(CPPFLAGS) $(LDFLAGS)
+	$(MAKE) copy_config
 
 static: $(OBJECTS)
-	$(CC) chat.cpp $(OBJECTS) -o chat $(CPPFLAGS) $(SFLAGS) $(LDFLAGS) 
+	$(call MKDIR,dist)
+	$(CC) src/main.cpp $(OBJECTS) -o dist/chat $(CPPFLAGS) $(SFLAGS) $(LDFLAGS)
+	$(MAKE) copy_config
 
 clean:
-	$(CLEAN_COMMAND) *.o $(YYJSON_SRC_DIR)*.o chat.exe
+	$(CLEAN_COMMAND) build\*.o dist\chat.exe dist\*.json
