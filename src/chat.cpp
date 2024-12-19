@@ -49,19 +49,20 @@ void Chat::draw() {
 
     for (const message_entry_t& entry : messages) {
         printActorChaTag(entry.actor_info->name);
-
         std::string actor_name = entry.actor_info->name;
-
+        
         if(actor_name == "System"){
             // to not fill all the screen with big system prompts
-            std::cout << entry.content.substr(0, 300) << "..." << std::endl;
+            if(entry.content.length() >= 300){
+                std::cout << entry.content.substr(0, 300) << "..." << std::endl;
+            }else{
+                std::cout << entry.content << std::endl;
+            }
+            std::cout << std::endl;
         }else{
             std::cout << entry.content << "\n";
         }
         
-        if (actor_name == "System") {
-            std::cout << "\n";
-        }
     }
 }
 

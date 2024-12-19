@@ -5,8 +5,12 @@ LDFLAGS += -Lyyjson
 OBJECTS := build/minipost.o build/terminal.o build/completion.o build/sjson.o build/utils.o build/chat.o build/yyjson.o
 
 COPY_FILES = $(if $(filter Windows_NT, $(OS)), \
-               copy $(subst /,\,$(1)) $(subst /,\,$(2)), \
-               cp $(1) $(2))
+			   copy $(subst /,\,$(1)) $(subst /,\,$(2)), \
+			   cp $(1) $(2))
+
+RM_FILES = $(if $(filter Windows_NT, $(OS)), \
+			   del $(subst /,\,$(1)), \
+			   rm $(1) || true) 
 
 
 # copy function for windows and linux
@@ -41,4 +45,8 @@ static: $(OBJECTS)
 	$(MAKE) copy_config
 
 clean:
-	$(CLEAN_COMMAND) build\*.o dist\chat.exe dist\*.json
+	$(call RM_FILES, build/*.o)
+	$(call RM_FILES, dist/chat*)
+	$(call RM_FILES, dist/*.json)
+	$(call RM_FILES, dist/*.sh)
+	$(call RM_FILES, dist/*.bat)
