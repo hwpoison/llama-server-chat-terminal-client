@@ -53,11 +53,11 @@ public:
 
   // TODO: socket (separate it)
   bool debug = false;
-  SocketType  connect_to(const char* ipaddr, int16_t port);
-  bool        send_data(SocketType connection, const char* data);
-  bool        close_connection(SocketType connection);
-  int         get_last_error();
-  void        clean_up();
+  SocketType  connectTo(const char* ipaddr, int16_t port);
+  bool        sendData(SocketType connection, const char* data);
+  bool        closeConnection(SocketType connection);
+  int         getLastError();
+  void        cleanUp();
 
   ~httpRequest();
 };

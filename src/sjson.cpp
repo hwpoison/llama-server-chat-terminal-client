@@ -41,7 +41,9 @@ yyjson_val* sjson::get_value(const char *keys[]) {
 };
 
 const char* sjson::get_str(const char *keys[]){
-    return yyjson_get_str(get_value(keys));
+    yyjson_val *value = get_value(keys);
+    const char *string = yyjson_get_str(value);
+    return string?string:"";
 }
 
 int64_t sjson::get_int(const char *keys[]){

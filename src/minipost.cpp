@@ -9,7 +9,7 @@ httpRequest::httpRequest() {
 #endif
 };
 
-bool httpRequest::close_connection(SocketType connection) {
+bool httpRequest::closeConnection(SocketType connection) {
 #ifdef __WIN32__
   closesocket(connection);
 #else
@@ -19,46 +19,23 @@ bool httpRequest::close_connection(SocketType connection) {
   return true;
 };
 
-bool httpRequest::send_data(SocketType connection, const char *data) {
+bool httpRequest::sendData(SocketType connection, const char *data) {
   if (send(connection, data, strlen(data), 0) == Socket_error) {
     logging::error("send() SOCKET ERROR");
-    get_last_error();
-    this->close_connection(connection);
+    getLastError();
+    this->closeConnection(connection);
     return 1;
   } else {
     return true;
   }
 };
 
-/* http
-std::string httpRequest::resolveDomain(const char *domain) {
-#ifdef __WIN32__
-  struct hostent *remoteHost;
-  struct in_addr addr;
-  std::string ip_address = "";
-  remoteHost = gethostbyname(domain);
-  int i = 0;
-  logging::info("Solving domain %s...", domain);
-  if (remoteHost->h_addrtype == AF_INET) {
-    while (remoteHost->h_addr_list[i] != 0) {
-      addr.s_addr = *(u_long *)remoteHost->h_addr_list[i++];
-      ip_address.assign(inet_ntoa(addr));
-    }
-  }
-  logging::success("Solved: %s --> %s", domain, ip_address);
-  return ip_address;
-#else
-  return domain;
-#endif
-}*/
-
 Response httpRequest::post(
         const char* ipaddr, 
         const int16_t port,
         const char* endpoint, 
         json payload,
-        const std::function<bool(std::string chunck, const CallbackBus *bus)> 
-        &reader_callback = nullptr, 
+        const std::function<bool(std::string chunck, const CallbackBus *bus)> &reader_callback = nullptr, 
         const CallbackBus *bus=nullptr)
 {
   if (!debug) {
@@ -70,7 +47,7 @@ Response httpRequest::post(
                 port);
   logging::info("Sending:", payload.c_str());
   SocketType connection =
-    connect_to(ipaddr, port);
+    connectTo(ipaddr, port);
   logging::info("Socket status: %d", connection);
   
   
@@ -89,7 +66,7 @@ Response httpRequest::post(
 
   logging::info(request_body.c_str());
 
-  if (!this->send_data(connection, request_body.c_str())) {
+  if (!this->sendData(connection, request_body.c_str())) {
     std::cout << "Error sending request." << std::endl;
     response.Status = 400;
     return response;
@@ -110,6 +87,7 @@ Response httpRequest::post(
 
     response.body.assign(buffer, bytesRead);
 
+    // to stream data
     if (reader_callback != nullptr) {
       if (!reader_callback(response.body, bus)) break;
     }
@@ -117,11 +95,11 @@ Response httpRequest::post(
 
   if (bytesRead == Socket_error) logging::error("Error receiving data.");
 
-  close_connection(connection);
+  closeConnection(connection);
   return response;
 };
 
-SocketType httpRequest::connect_to(const char *ipaddr, int16_t port) {
+SocketType httpRequest::connectTo(const char *ipaddr, int16_t port) {
 #ifdef __WIN32__
   WSADATA wsaData;
   if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
@@ -134,7 +112,7 @@ SocketType httpRequest::connect_to(const char *ipaddr, int16_t port) {
 
   if (clientSocket == Invalid_socket) {
     logging::error("Error to create a socket.");
-    clean_up();
+    cleanUp();
     return 1;
   }
 
@@ -146,15 +124,15 @@ SocketType httpRequest::connect_to(const char *ipaddr, int16_t port) {
   if (connect(clientSocket, (sockaddr *)&serverAddress,
               sizeof(serverAddress)) == Socket_error) {
     logging::error("Error connecting to the server.");
-    get_last_error();
-    close_connection(clientSocket);
+    getLastError();
+    closeConnection(clientSocket);
     return -1;
   }
   logging::success("Socket created.");
   return clientSocket;
 }
 
-int httpRequest::get_last_error() {
+int httpRequest::getLastError() {
 #ifdef __WIN32__
   int errorCode = WSAGetLastError();
   if (errorCode != 0) {
@@ -176,10 +154,10 @@ int httpRequest::get_last_error() {
 #endif
 }
 
-void httpRequest::clean_up() {
+void httpRequest::cleanUp() {
 #ifdef __WIN32__
   WSACleanup();
 #endif
 }
 
-httpRequest::~httpRequest() { clean_up(); }
+httpRequest::~httpRequest() { cleanUp(); }

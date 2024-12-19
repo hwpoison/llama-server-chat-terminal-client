@@ -107,6 +107,15 @@ static void debug(const char* msg, ...) {
   }
 }
 
+static void log(const char* msg, ...) {
+  if (LOG_LEVEL & DEBUG_LVL) {
+    va_list args;
+    va_start(args, msg);
+    writeToFile("[DEBUG]", msg, args);
+    va_end(args);
+  }
+}
+
 static void warn(const char* msg, ...) {
   if (LOG_LEVEL & WARN_LVL) {
     printf("%s", YEL "[WARN] " ANSI_COLOR_RESET);

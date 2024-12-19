@@ -34,6 +34,7 @@ struct prompt_template_t {
     std::string eos; // End of string
 };
 
+
 static void completionSignalHandler(int signum) {
     if(completionInProgress){
         stopCompletionFlag =  true;
@@ -41,49 +42,55 @@ static void completionSignalHandler(int signum) {
     }
 }
 
-static bool completionCallback(const std::string &chunck, const CallbackBus *bus) {
+static bool completionCallback(const std::string &chunk, const CallbackBus *bus) {
     if (stopCompletionFlag) {
         Terminal::setTitle("Completion interrupted by user");
         stopCompletionFlag = false;
         completionInProgress = false;
         return false;
     }
-    
-    // Extract and parse completion response data
-    std::string completionData = chunck;
+
+    // response keys
+    static const char *contentKey[] = {"content", "\0"};
+    static const char *endOfCompletationKey[] = {"stop", "\0"};
+    static const char *tokenPerSecondsKey[] = {"timings", "predicted_per_second", "\0"};
+
+    // Extract json fragment from chunk
+    std::string completionData = chunk;
     if (const_cast<CallbackBus*>(bus)->stream) {
-        size_t dataPos = chunck.find("data: ");
-        if (dataPos == std::string::npos) return true;
-        completionData = chunck.substr(dataPos + 6);
+        size_t dataKeyPos = chunk.find("data: ");
+        if (dataKeyPos == std::string::npos) return true;
+        completionData = chunk.substr(dataKeyPos + 6);
     } else {
-        size_t dataPos = chunck.find("\"content\":");
-        if (dataPos == std::string::npos) return true;
+        size_t contentKeyPos = chunk.find("\"content\":");
+        if (contentKeyPos == std::string::npos) return true;
     }
 
-    // Parse result
+    // Parse the json
     sjson result(sjson::read(completionData.c_str()));
-    
-    // Check std::end of completion
-    const char *content_[] = {"content", "\0"};
-    const char *end_of_c[] = {"stop", "\0"};
-    std::string token;
-    token = result.get_str(content_);
-    if (result.get_bool(end_of_c)) {
+
+    // Get current token under 'content' key
+    std::string token = result.get_str(contentKey);
+
+    // Check end of completation
+    if (result.get_bool(endOfCompletationKey)) {
         if (!const_cast<CallbackBus*>(bus)->stream){
             std::cout << token;
             const_cast<CallbackBus*>(bus)->buffer+=token;
         }
-        const char *timing[] = {"timings", "predicted_per_second", "\0"};
-        double tokensPerSecond = result.get_real(timing);
-        // show token speed in the terminal title
+
+        // show token/s in the terminal title
         char windowTitle[30];
         std::snprintf(windowTitle, sizeof(windowTitle), "%.1f t/s\n",
-                      tokensPerSecond);
+                      result.get_real(tokenPerSecondsKey));
         Terminal::setTitle(windowTitle);
+
         completionInProgress = false;
         return false;
     }
-    std::cout << token << std::flush;  // write the token in terminal
+
+    // Print the token in terminal
+    std::cout << token << std::flush;
 
     const_cast<CallbackBus*>(bus)->buffer+=token;
     return true;
