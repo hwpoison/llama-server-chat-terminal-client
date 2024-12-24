@@ -74,30 +74,45 @@ Response httpRequest::post(
 
   char buffer[BUFFER_SIZE];
   int bytesRead;
+  bool streaming=true;
   logging::info("Waiting recv() answer");
-  while ((bytesRead = recv(connection, buffer, sizeof(buffer), 0)) > 0) {
-    if (bytesRead == 0) break;
 
-    std::string bufferStr(buffer);
+  std::string accumulatedBuffer;
+  
+  while (streaming
+    and (bytesRead = recv(connection, buffer, sizeof(buffer), 0)) > 0) {
+      if (bytesRead == 0) break;
+      accumulatedBuffer.append(buffer, bytesRead);
+      
+      // Get HTTP code
+      size_t httpPos = accumulatedBuffer.find("HTTP");
+      if (httpPos != std::string::npos) {
+        response.Status = std::stoi(accumulatedBuffer.substr(9, 3));
+      };
 
-    size_t httpPos = bufferStr.find("HTTP");
-    if (httpPos != std::string::npos) {
-      response.Status = std::stoi(bufferStr.substr(9, 3));
-    };
+      // Iter stream content line by line
+      size_t lineEndPos;
+      while ((lineEndPos = accumulatedBuffer.find('\n')) != std::string::npos) {
+          std::string line = accumulatedBuffer.substr(0, lineEndPos);
+          accumulatedBuffer.erase(0, lineEndPos + 1);
+          if (reader_callback != nullptr) {
+              if (!reader_callback(line, bus)) streaming=false;
+          }
+      }
 
-    response.body.assign(buffer, bytesRead);
-
-    // to stream data
-    if (reader_callback != nullptr) {
-      if (!reader_callback(response.body, bus)) break;
-    }
+      // remain data
+      if (!accumulatedBuffer.empty() && streaming) {
+          if (reader_callback != nullptr) {
+              reader_callback(accumulatedBuffer, bus);
+          }
+      }
   };
 
   if (bytesRead == Socket_error) logging::error("Error receiving data.");
 
   closeConnection(connection);
   return response;
-};
+}
 
 SocketType httpRequest::connectTo(const char *ipaddr, int16_t port) {
 #ifdef __WIN32__

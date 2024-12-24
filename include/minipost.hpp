@@ -23,7 +23,7 @@
 #include "logging.hpp"
 #include "terminal.hpp"
 
-#define BUFFER_SIZE 50000 // 50kb
+#define BUFFER_SIZE 100000 // 100kb
 #define HTTP_INTERNAL_ERROR 500
 #define HTTP_OK 200
 
@@ -36,6 +36,7 @@ struct Response {
 };
 
 struct CallbackBus {
+  virtual ~CallbackBus() = default; // Destructor virtual para polimorfismo
   std::string buffer;
   bool stream;
 };
@@ -50,8 +51,7 @@ public:
                 json payload,
                 const std::function<bool(std::string chunck, const CallbackBus *bus)> &reader_callback, 
                 const CallbackBus *bus);  
-
-  // TODO: socket (separate it)
+  
   bool debug = false;
   SocketType  connectTo(const char* ipaddr, int16_t port);
   bool        sendData(SocketType connection, const char* data);

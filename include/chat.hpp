@@ -11,25 +11,28 @@
 #include "completion.hpp"
 #include "colors.h"
 #include "logging.hpp"
-
+#include "utils.hpp"
 
 #define DEFAULT_FILE_EXTENSION ".json"
-#define MY_PROMPT_FILENAME "prompts.json"
-#define TEMPLATES_FILENAME "templates.json"
+#define USER_PROMPT_FILE "prompts.json"
+#define DEFAULT_SAVE_FOLDER "saved_chats/"
 
 //////////////////////////////////////////////
 struct actor_t {
     std::string name;
     std::string role;
     std::string tag_color;
-    std::string msg_preffix; // for rol behaviour
+    std::string msg_preffix;
+    std::string icon;
 };
 
 struct message_entry_t {
-    message_entry_t(actor_t *actor_info, std::string content) : actor_info(actor_info), content(content) {}
+    message_entry_t(int64_t id, actor_t *actor_info, std::string content) : id(id), actor_info(actor_info), content(content) {}
+    int64_t id;
     actor_t *actor_info;
     std::string content;
 };
+
 typedef std::vector<message_entry_t> messages_t;
 
 typedef std::map<std::string, actor_t> actors_t;
@@ -66,7 +69,7 @@ public:
 
     void addActorStopWords(std::string actor_name);
 
-    bool addActor(std::string name, const char* role, const char* tag_color, std::string preffix = "");
+    bool addActor(std::string name, const char* role, const char* tag_color, std::string preffix = "", std::string icon = "");
 
     std::string& getUserName();
 
@@ -84,17 +87,23 @@ public:
 
     std::string composePrompt();
 
-    bool setInstructMode(bool value);
+    yyjson_mut_doc* getPromptJSON();
 
-    bool isInstructMode();
+    yyjson_mut_doc* getOAIPrompt();
+
+    bool setChatMode(bool value);
+
+    bool isChatMode();
 
     bool setChatGuards(bool value);
+
+    yyjson_mut_doc* getCurrentPrompt();
 
 private:
     messages_t messages;
 
     bool chat_guards = true;
-    bool instruct_mode = false;
+    bool chat_mode = true;
     bool using_system_prompt = false;
     std::string user_name;
     std::string assistant_name;

@@ -3,7 +3,93 @@
 bool stopCompletionFlag = false;
 bool completionInProgress = false;
 
-// Read parameters from params.json file. [params_profiles][profile_name]
+bool Completion::completionCallback(const std::string &chunk, const CallbackBus *bus) {
+    if (stopCompletionFlag) {
+        Terminal::setTitle("Completion interrupted by user");
+        stopCompletionFlag = false;
+        completionInProgress = false;
+        return false; //callback will return False so streaming will stop.
+    }
+
+    // Extract json fragment from chunk
+    std::string completionData = chunk;
+    if (const_cast<CallbackBus*>(bus)->stream) {
+        size_t dataKeyPos = chunk.find("data: ");
+        if (dataKeyPos == std::string::npos) return true;
+        completionData = chunk.substr(dataKeyPos + 6);
+    } else {
+        size_t contentKeyPos = chunk.find("\"content\":");
+        if (contentKeyPos == std::string::npos) return true;
+    }
+    
+    // Parse the data
+    yyjson_doc *doc = yyjson_read(completionData.c_str(), strlen(completionData.c_str()), 0);
+
+    // Just ignore bad chunks
+    if(doc == NULL){
+        yyjson_doc_free(doc);
+        return false;
+    }
+
+    yyjson_val *root = yyjson_doc_get_root(doc);
+
+    std::string token = "";
+    bool endOfCompletation = false;
+    double tokenPerSeconds = 0.0;
+   
+    // Read incoming json data 
+    if(using_oai_completion){
+        yyjson_val *choices = yyjson_obj_get(root, "choices");
+        yyjson_val *content_array = yyjson_arr_get(choices, 0);
+        yyjson_val *finish_reason = yyjson_obj_get(content_array, "finish_reason");
+
+        if(!yyjson_is_null(finish_reason)) {
+            yyjson_val *timings = yyjson_obj_get(root, "timings");
+            yyjson_val *predicted_per_second = yyjson_obj_get(timings, "predicted_per_second");
+            tokenPerSeconds = yyjson_get_real(predicted_per_second);
+            endOfCompletation = true;
+        }else{
+            yyjson_val *delta = yyjson_obj_get(content_array, "delta");
+            yyjson_val *content = yyjson_obj_get(delta, "content");
+            token = yyjson_get_str(content);
+        }
+    }else{
+        yyjson_val *content = yyjson_obj_get(root, "content");
+        token = yyjson_get_str(content);
+
+        yyjson_val *timings = yyjson_obj_get(root, "timings");
+        yyjson_val *predicted_per_second = yyjson_obj_get(timings, "predicted_per_second");
+
+        tokenPerSeconds = yyjson_get_real(predicted_per_second);
+        yyjson_val *stop = yyjson_obj_get(root, "stop");
+        endOfCompletation = yyjson_get_bool(stop);
+    }
+
+    yyjson_doc_free(doc);
+
+    // Check end of completation
+    if (endOfCompletation) {
+        if (!const_cast<CallbackBus*>(bus)->stream){
+            std::cout << token;
+            const_cast<CallbackBus*>(bus)->buffer+=token;
+        }
+
+        // show token/s in the terminal title
+        char windowTitle[30];
+        std::snprintf(windowTitle, sizeof(windowTitle), "%.1f t/s\n",
+                      tokenPerSeconds);
+        Terminal::setTitle(windowTitle);
+        completionInProgress = false;
+        return false;
+    }
+
+    // Print the token in terminal
+    std::cout << token << std::flush;
+    const_cast<CallbackBus*>(bus)->buffer+=token;
+    return true;
+}
+
+// Read parameters from params.json file
 bool Completion::loadParametersSettings(std::string_view profile_name) {
     sjson parameters_file = sjson(PARAMS_FILENAME);
     if(!parameters_file.is_opened())
@@ -17,6 +103,7 @@ bool Completion::loadParametersSettings(std::string_view profile_name) {
     yyjson_val *key, *val;
     yyjson_obj_iter iter = yyjson_obj_iter_with(parameter_profile);
 
+    // reset current parameters
     parameters.clear();
 
     // Map the json content to parameters
@@ -46,44 +133,54 @@ bool Completion::loadParametersSettings(std::string_view profile_name) {
     }
 
     if(this->parameters.get<bool>("stream") == false)
-        completionBuffer.stream = false;
+        completionBus.stream = false;
 
     return true;
 }
 
 // load parameters from params.json
-bool Completion::loadPromptTemplates(std::string_view prompt_template_name) {
+bool Completion::loadChatTemplates(std::string_view chat_template_name) {
     sjson templates_fp = sjson(TEMPLATES_FILENAME);
-    if(!templates_fp.is_opened())
-        return false;
+    if(!templates_fp.is_opened()) return false;
 
-    const char *main_key = "prompt_templates";
+    const char *main_key[] = {"chat_templates", chat_template_name.data(), "\0"};
     
+    if(templates_fp.get_value(main_key) == NULL) return false;
+
     const auto loadSeqToken = [&](const char *key, const char *field_key) {
-        const char *keys[] = {main_key, prompt_template_name.data(), key, field_key, "\0"};
+        const char *keys[] = {"chat_templates", chat_template_name.data(), key, field_key, "\0"};
         const char* key_value = templates_fp.get_str(keys);
         return key_value?key_value:"";
     };
 
-    prompt_template.bos =                loadSeqToken("SEQ", "BOS");
-    prompt_template.begin_system =       loadSeqToken("SEQ", "B_SYS");
-    prompt_template.end_system =         loadSeqToken("SEQ", "E_SYS");
-    prompt_template.begin_user =         loadSeqToken("SEQ", "B_USER");
-    prompt_template.end_user =           loadSeqToken("SEQ", "E_USER");
-    prompt_template.begin_assistant =    loadSeqToken("SEQ", "B_ASSISTANT");
-    prompt_template.end_assistant =      loadSeqToken("SEQ", "E_ASSISTANT");
-    prompt_template.eos =                loadSeqToken("SEQ", "EOS");
+    chat_template.bos =                loadSeqToken("SEQ", "BOS");
+    chat_template.begin_system =       loadSeqToken("SEQ", "B_SYS");
+    chat_template.end_system =         loadSeqToken("SEQ", "E_SYS");
+    chat_template.begin_user =         loadSeqToken("SEQ", "B_USER");
+    chat_template.end_user =           loadSeqToken("SEQ", "E_USER");
+    chat_template.begin_assistant =    loadSeqToken("SEQ", "B_ASSISTANT");
+    chat_template.end_assistant =      loadSeqToken("SEQ", "E_ASSISTANT");
+    chat_template.eos =                loadSeqToken("SEQ", "EOS");
 
     return true;
 }
 
 // compose json to send
-std::string Completion::dumpJsonPayload(std::string prompt_content) {
+std::string Completion::dumpPayload(yyjson_mut_doc* prompt_json) {
     yyjson_mut_doc *doc = yyjson_mut_doc_new(NULL);
     yyjson_mut_val *root = yyjson_mut_obj(doc);
     yyjson_mut_doc_set_root(doc, root);
-    yyjson_mut_obj_add_str(doc, root, "prompt", prompt_content.c_str());
- 
+
+    yyjson_mut_val *prompt_root = yyjson_mut_doc_get_root(prompt_json);
+
+    // add the prompt_json to the main json root
+    size_t idx, max;
+    yyjson_mut_val *key, *val;
+    yyjson_mut_obj_foreach(prompt_root, idx, max, key, val) {
+        const char* keyStr = yyjson_mut_get_str(key);
+        yyjson_mut_obj_add_val(doc, root, keyStr, yyjson_mut_val_mut_copy(doc, val));
+    }
+
     // stop word list
     const char **stop_word_arr = new const char *[stop_words.size()];
     for(int i = 0; i < stop_words.size(); i++)
@@ -106,22 +203,33 @@ std::string Completion::dumpJsonPayload(std::string prompt_content) {
 
     const char *json = yyjson_mut_write(doc, 0, NULL);
     std::string result(json);
-
+    
     delete[] stop_word_arr;
     yyjson_mut_doc_free(doc);
     free(const_cast<char*>(json));
+
+    logging::log("%s", result.c_str());;
     return result;
 }
 
 Response Completion::requestCompletion(
-    const char* ipaddr, const int16_t port, std::string prompt) 
+    const char* ipaddr, const int16_t port, yyjson_mut_doc* prompt_json) 
 {
     completionInProgress = true;
-    return Req.post(ipaddr, port, DEFAULT_COMPLETION_ENDPOINT, dumpJsonPayload(prompt), completionCallback, &completionBuffer);
+    return Req.post(
+        ipaddr, 
+        port, 
+        using_oai_completion?OAI_COMPLETION_ENDPOINT:COMPLETION_ENDPOINT, 
+        dumpPayload(prompt_json), 
+        [this](std::string response, const CallbackBus* bus) -> bool {
+            return this->completionCallback(response, bus);
+        }, 
+        &completionBus
+    );
 }
 
-prompt_template_t& Completion::getTemplates(){
-    return prompt_template;
+chat_template_t& Completion::getChatTemplates(){
+    return chat_template;
 }
 
 void Completion::addStopWord(std::string word){

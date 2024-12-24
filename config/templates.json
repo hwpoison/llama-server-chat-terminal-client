@@ -1,5 +1,5 @@
 ///////////////////////////////////////////
-// All prompt templates                  
+// All chat templates                  
 /*
 	SEQ: Header and Footer for determinated roles. (optionals)
 		B_SYS and E_SYS: System
@@ -9,7 +9,7 @@
 */
 ///////////////////////////////////////////
 {
-	"prompt_templates":{
+	"chat_templates":{
 		"empty":
 		{
 			"SEQ":{
@@ -107,10 +107,10 @@
 		},
 		"llama3.2":{
 		    "SEQ":{
-				"B_SYS":		"<|begin_of_text|><|start_header_id|>system<|end_header_id|>",
+				"B_SYS":		"<|start_header_id|>system<|end_header_id|>\n\n",
 				"E_SYS":		"\n",
-				"B_USER":		"<|start_header_id|>user<|end_header_id|>",
-				"E_USER": 		"<|eot_id|>\n",
+				"B_USER":		"<|start_header_id|>user<|end_header_id|>\n",
+				"E_USER": 		"<|eot_id|>",
 				"B_ASSISTANT":	"<|start_header_id|>assistant<|end_header_id|>\n",
 				"E_ASSISTANT": 	"<|eot_id|>\n"
 				

@@ -44,6 +44,10 @@ const std::string getDate() {
     return buf;
 }
 
+int64_t getTimeStamp() {
+    return static_cast<int64_t>(time(0));
+}
+
 const char *get_arg_value(int argc, char **argv, const char *target_arg){
     for(int arg_idx = 0; arg_idx < argc; arg_idx++){
         if(!strcmp(argv[arg_idx], target_arg)) // <arg> <value> 
@@ -56,7 +60,8 @@ void printCmdHelp(){
     std::cout << "Usage:\n \
     --prompt <my_prompt_name> (default: creative)\n \
     --param-profile <profile_name> (default: samantha)\n \
-    --prompt-template <template_name> (default: empty)\n \
+    --chat-template <template_name> (default: None)\n \
+    --no-chat-tags Disable chat style actors tags (ex:  'User:' 'Someone:')\n \
     --no-chat-guards (default: true)\n \
     --ip <ip address> (default: 127.0.0.1)\n \
     --port <port> (default: 8080)" << std::endl;
@@ -66,7 +71,6 @@ void printCmdHelp(){
 void printChatHelp() {
     std::cout << "Conversation manipulation:\n \
     /narrator: Lets the narrator generate a narration.\n \
-    /director: Switch to director mode input.\n \
     /actor / now: Choose who will talk now. If the actor doesn't exist, it will be created. (e.g., /now Einstein)\n \
     /as: Pretend to be an actor and prompt it. (e.g., /as Einstein)\n \
     /talkto: Talk to a specific character. It will switch the current talking actor. (e.g., /talkto Monica)\n \
@@ -77,7 +81,7 @@ void printChatHelp() {
     /undolast: Undo only the last completion.\n \
     /undo / u: Undo the last completion and user input.\n\n \
 Conversation mode:\n \
-    /instruct on/off: Turn on/off chat tags for instruction mode.\n\n \
+    /chat on/off: Turn on/off chat tags.\n\n \
 Conversation saving:\n \
     /save (chatname): Save the chat (without extension).\n \
     /load (chatname): Load a previously saved chat.\n\n \

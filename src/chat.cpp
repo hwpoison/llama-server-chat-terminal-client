@@ -2,24 +2,20 @@
 
 
 void Chat::addNewMessage(std::string_view actor_name, std::string_view content) {
-    message_entry_t newEntry(&actors[actor_name.data()], content.data());
+    message_entry_t newEntry(getTimeStamp(), &actors[actor_name.data()], content.data());
     messages.push_back(newEntry);
 }
 
 bool Chat::removeLastMessage(int nmessages = 1) {
     size_t message_count = messages.size();
 
-    if(instruct_mode && message_count == 1){
+    if(!chat_mode && message_count == 1){
         messages.pop_back();
         return true;
     }
 
     if (message_count == 2) {
-        if(using_system_prompt){
-            messages.pop_back();
-        }else{
-            messages.clear();
-        }
+        using_system_prompt?messages.pop_back():messages.clear();
         return true;
     };
 
@@ -36,7 +32,7 @@ void Chat::updateMessageContent(int number, std::string_view newContent) {
 }
 
 void Chat::resetChatHistory(){ 
-    if(instruct_mode or !using_system_prompt){ // remove all messages
+    if(!using_system_prompt){ // remove all messages
         messages.clear();
     }else{             // reset all except the system prompt
         if (messages.size() > 1)
@@ -46,32 +42,26 @@ void Chat::resetChatHistory(){
 
 void Chat::draw() {
     Terminal::clear();
-
     for (const message_entry_t& entry : messages) {
         printActorChaTag(entry.actor_info->name);
         std::string actor_name = entry.actor_info->name;
         
         if(actor_name == "System"){
-            // to not fill all the screen with big system prompts
-            if(entry.content.length() >= 300){
-                std::cout << entry.content.substr(0, 300) << "..." << std::endl;
-            }else{
-                std::cout << entry.content << std::endl;
-            }
-            std::cout << std::endl;
+            // Limit System draw to 300 characters.
+            std::cout << (entry.content.length() > 300 ? entry.content.substr(0, 300) + "..." : entry.content);
+            std::cout << "\n\n";
         }else{
-            std::cout << entry.content << "\n";
+            std::cout << entry.content << std::endl;
         }
-        
     }
 }
 
 bool Chat::loadUserPrompt(std::string_view prompt_name) {
-    sjson prompt_file = sjson(MY_PROMPT_FILENAME);
+    sjson prompt_file = sjson(USER_PROMPT_FILE);
     if(!prompt_file.is_opened())
         return false;
 
-    const char* prompt_[] = {prompt_name.data(), "\0"}; // file -> daryl
+    const char* prompt_[] = {prompt_name.data(), "\0"};
     yyjson_val *my_prompt = prompt_file.get_value(prompt_);
     if(my_prompt==NULL){
         logging::error("Prompt \"%s\" not found.", prompt_name.data());
@@ -104,11 +94,17 @@ bool Chat::loadUserPrompt(std::string_view prompt_name) {
             yyjson_val *role = yyjson_obj_get(actor, "role");
             yyjson_val *color = yyjson_obj_get(actor, "color");
             yyjson_val *msg_preffix = yyjson_obj_get(actor, "msg_preffix");
+            yyjson_val *icon = yyjson_obj_get(actor, "icon");
             if (name && role) {
                 const char *name_str = yyjson_get_str(name);
                 const char *role_str = yyjson_get_str(role);
                 const char *color_str = "";
                 const char *msg_preffix_str = "";
+                const char *icon_str = "";
+
+                if(icon != NULL){
+                    icon_str = yyjson_get_str(icon);
+                }
 
                 if (msg_preffix != NULL) {
                     msg_preffix_str = yyjson_get_str(msg_preffix);
@@ -119,7 +115,7 @@ bool Chat::loadUserPrompt(std::string_view prompt_name) {
                     color_str = ANSIColors::getRandColor();
                 }
 
-                addActor(name_str, role_str, color_str, msg_preffix_str);
+                addActor(name_str, role_str, color_str, msg_preffix_str, icon_str);
                 if(!strcmp(role_str,"user")){
                     user_name = name_str;
                 }else if(!strcmp(role_str,"assistant")){
@@ -161,6 +157,7 @@ bool Chat::loadSavedConversation(std::string file_path) {
     size_t idx, max;
     yyjson_val *hit;
     yyjson_arr_foreach(hits, idx, max, hit) {
+        int64_t    id        = yyjson_get_int(yyjson_obj_get(hit, "id"));
         const char *name_str = yyjson_get_str(yyjson_obj_get(hit, "name"));
         const char *role_str = yyjson_get_str(yyjson_obj_get(hit, "role"));
         const char *content = yyjson_get_str(yyjson_obj_get(hit, "content"));
@@ -184,11 +181,11 @@ bool Chat::saveConversation(std::string filename) {
 
     // History array
     yyjson_mut_val *historyArray = yyjson_mut_arr(doc);
-    int msg_id = 0;
+
     for (const message_entry_t &entry : messages) {
         yyjson_mut_val *historyEntry = yyjson_mut_obj(doc);
         yyjson_mut_obj_add_int(doc, historyEntry, "id",
-                               msg_id++);
+                               entry.id);
         yyjson_mut_obj_add_str(doc, historyEntry, "name",
                                entry.actor_info->name.c_str());
         yyjson_mut_obj_add_str(doc, historyEntry, "role",
@@ -213,20 +210,27 @@ bool Chat::saveConversation(std::string filename) {
 
 void Chat::printActorChaTag(std::string_view actor_name) {
     actor_t actor = actors[actor_name.data()];
-    std::cout << ANSIColors::getColorCode(actor.tag_color) << actor.name
+    std::cout << actor.icon << " " << ANSIColors::getColorCode(actor.tag_color) << actor.name
               << ANSI_COLOR_RESET << ":";
 }
 
 void Chat::addActorStopWords(std::string actor_name){
-    addStopWord(actor_name + ":");
-    addStopWord(toUpperCase(actor_name + ":"));
-    addStopWord(toLowerCase(actor_name + ":"));
+    std::string user_chat_tag = "\n" + actor_name + ":";
+    addStopWord(user_chat_tag);
+    addStopWord(toUpperCase(user_chat_tag));
+    addStopWord(toLowerCase(user_chat_tag));
 }
 
-bool Chat::addActor(std::string name, const char* role, const char* tag_color, std::string preffix){
+bool Chat::addActor(
+        std::string name, 
+        const char* role, 
+        const char* tag_color, 
+        std::string preffix, 
+        std::string icon
+    ){
     if(actors.find(name.data()) != actors.end() ? true : false)
         return false;
-    actor_t new_actor = { name, role, tag_color , preffix};
+    actor_t new_actor = { name, role, tag_color , preffix, icon};
     actors[new_actor.name] = new_actor;
     if(chat_guards) addActorStopWords(name);
     return true;
@@ -247,9 +251,9 @@ void Chat::removeAllActors(){
 // Delete double breakline and space at the start
 void Chat::cureCompletionForChat(){
     if(chat_guards){
-        completionBuffer.buffer.erase(0, completionBuffer.buffer.find_first_not_of(" "));
-        while (!completionBuffer.buffer.empty() && completionBuffer.buffer.back() == '\n') {
-            completionBuffer.buffer.erase(completionBuffer.buffer.size() - 1);
+        completionBus.buffer.erase(0, completionBus.buffer.find_first_not_of(" "));
+        while (!completionBus.buffer.empty() && completionBus.buffer.back() == '\n') {
+            completionBus.buffer.erase(completionBus.buffer.size() - 1);
         }
     }
 }
@@ -261,7 +265,7 @@ void Chat::setupChatStopWords() {
             addActorStopWords(actor.name);
         }
 
-        prompt_template_t &templates = getTemplates(); 
+        chat_template_t &templates = getChatTemplates(); 
         auto addStop = [this](std::string token) {
             if(token==""){}else{
                 if(token!="\n") addStopWord(normalizeText(token));
@@ -273,7 +277,6 @@ void Chat::setupChatStopWords() {
         addStop(templates.begin_system);
         addStop(templates.end_system);
         addStop(templates.eos);
-
     }
 }
 
@@ -283,54 +286,89 @@ int Chat::messagesCount(){
 
 void Chat::listCurrentActors(){
     for (const auto &[key, value] : actors) {
-        std::cout << key << "\n";
+        std::cout << "\t*" << key << "\n";
     }
 }
 
 // Return legacy prompt with applied prompt template
 std::string Chat::composePrompt(){
     std::string newPrompt;
-    prompt_template_t &prompt_template = getTemplates();
-    newPrompt+= prompt_template.bos;
+    chat_template_t &chat_template = getChatTemplates();
+    newPrompt+= chat_template.bos;
     for (size_t i = 0; i < messages.size(); ++i) {
         const message_entry_t& entry = messages[i];
         bool is_last = i == messages.size() - 1;
         std::string tag = entry.actor_info->name + ":";
         if (entry.actor_info->role == "user") {
-            newPrompt += prompt_template.begin_user;
-            if(!instruct_mode)newPrompt += tag;
+            newPrompt += chat_template.begin_user;
+            if(chat_mode)newPrompt += tag;
             newPrompt += entry.actor_info->msg_preffix;
             newPrompt += entry.content;
-            if(!is_last)newPrompt += prompt_template.end_user;
+            if(!is_last)newPrompt += chat_template.end_user;
         } else if (entry.actor_info->role == "system") {
-            newPrompt += prompt_template.begin_system;
+            newPrompt += chat_template.begin_system;
             newPrompt += entry.actor_info->msg_preffix;
             newPrompt += entry.content;
-            newPrompt += prompt_template.end_system;
+            newPrompt += chat_template.end_system;
         }else{
-            newPrompt += prompt_template.begin_assistant;
-            if(!instruct_mode)newPrompt += tag;
+            newPrompt += chat_template.begin_assistant;
+            if(chat_mode)newPrompt += tag;
             newPrompt += entry.actor_info->msg_preffix;
             newPrompt += entry.content;
-            if(!is_last)newPrompt += prompt_template.end_assistant;
-            if(!is_last)newPrompt += prompt_template.eos;
+            if(!is_last)newPrompt += chat_template.end_assistant;
+            if(!is_last)newPrompt += chat_template.eos;
         }
     };
 
     return newPrompt;
 }
 
-// ignore actor tags in chat
-bool Chat::setInstructMode(bool value){
-    instruct_mode = value;
-    return instruct_mode;
+yyjson_mut_doc* Chat::getPromptJSON() {
+    yyjson_mut_doc *doc = yyjson_mut_doc_new(NULL);
+    yyjson_mut_val *root = yyjson_mut_obj(doc);
+    yyjson_mut_doc_set_root(doc, root);
+    std::string prompt = composePrompt();
+    yyjson_mut_obj_add_strcpy(doc, root, "prompt", prompt.c_str());
+    return doc;
 }
 
-bool Chat::isInstructMode(){
-    return instruct_mode;
+yyjson_mut_doc* Chat::getOAIPrompt(){
+    yyjson_mut_doc *doc = yyjson_mut_doc_new(NULL);
+    yyjson_mut_val *root = yyjson_mut_obj(doc);
+    yyjson_mut_doc_set_root(doc, root);
+
+    yyjson_mut_val *messagesArray = yyjson_mut_arr(doc);
+    for (const auto& entry : messages) {
+        yyjson_mut_val *messageObj = yyjson_mut_obj(doc);
+        yyjson_mut_obj_add_str(doc, messageObj, "content", entry.content.c_str());
+        yyjson_mut_obj_add_str(doc, messageObj, "role", entry.actor_info->role.c_str());
+        yyjson_mut_obj_add_int(doc, messageObj, "id", entry.id);
+        yyjson_mut_arr_add_val(messagesArray, messageObj);
+    }
+
+    yyjson_mut_obj_add_val(doc, root, "messages", messagesArray);
+
+    return doc;
+}
+
+// ignore actor tags in chat
+bool Chat::setChatMode(bool value){
+    chat_mode = value;
+    return chat_mode;
+}
+
+bool Chat::isChatMode(){
+    return chat_mode;
 }
 
 bool Chat::setChatGuards(bool value){
     chat_guards = value;
     return chat_guards;
+}
+
+yyjson_mut_doc* Chat::getCurrentPrompt(){
+    if(using_oai_completion){
+        return getOAIPrompt();
+    }
+    return getPromptJSON();
 }
