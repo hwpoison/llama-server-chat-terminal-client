@@ -4,7 +4,7 @@ httpRequest::httpRequest() {
 #ifdef __WIN32__
   WSADATA wsaData;
   if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
-    logging::error("Error to initialize winsock library.");
+    Logging::error("Error to initialize winsock library.");
   }
 #endif
 };
@@ -15,13 +15,13 @@ bool httpRequest::closeConnection(SocketType connection) {
 #else
   close(connection);
 #endif
-  logging::info("Conection closed");
+  Logging::log("Conection closed");
   return true;
 };
 
 bool httpRequest::sendData(SocketType connection, const char *data) {
   if (send(connection, data, strlen(data), 0) == Socket_error) {
-    logging::error("send() SOCKET ERROR");
+    Logging::error("send() SOCKET ERROR");
     getLastError();
     this->closeConnection(connection);
     return 1;
@@ -38,20 +38,17 @@ Response httpRequest::post(
         const std::function<bool(std::string chunck, const CallbackBus *bus)> &reader_callback = nullptr, 
         const CallbackBus *bus=nullptr)
 {
-  if (!debug) {
-    logging::disable_msg();
-  }
 
   Response response;
-  logging::info("Connecting to %s to port %d", ipaddr,
+  Logging::log("Connecting to %s to port %d", ipaddr,
                 port);
-  logging::info("Sending:", payload.c_str());
+  Logging::log("Sending:", payload.c_str());
   SocketType connection =
     connectTo(ipaddr, port);
-  logging::info("Socket status: %d", connection);
+  Logging::log("Socket status: %d", connection);
   
   
-  logging::info("Sending POST request");
+  Logging::log("Sending POST request");
 
   std::string request_body = "POST " + std::string(endpoint)  + " HTTP/1.1\r\n";
   request_body += "Host: \r\n";
@@ -64,7 +61,7 @@ Response httpRequest::post(
   request_body += "\r\n";
   request_body += payload;
 
-  logging::info(request_body.c_str());
+  Logging::log(request_body.c_str());
 
   if (!this->sendData(connection, request_body.c_str())) {
     std::cout << "Error sending request." << std::endl;
@@ -75,7 +72,7 @@ Response httpRequest::post(
   char buffer[BUFFER_SIZE];
   int bytesRead;
   bool streaming=true;
-  logging::info("Waiting recv() answer");
+  Logging::log("Waiting recv() answer");
 
   std::string accumulatedBuffer;
   
@@ -108,7 +105,7 @@ Response httpRequest::post(
       }
   };
 
-  if (bytesRead == Socket_error) logging::error("Error receiving data.");
+  if (bytesRead == Socket_error) Logging::error("Error receiving data.");
 
   closeConnection(connection);
   return response;
@@ -118,7 +115,7 @@ SocketType httpRequest::connectTo(const char *ipaddr, int16_t port) {
 #ifdef __WIN32__
   WSADATA wsaData;
   if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
-    logging::error("Error initializing winsock.");
+    Logging::error("Error initializing winsock.");
     return 1;
   }
 #endif
@@ -126,7 +123,7 @@ SocketType httpRequest::connectTo(const char *ipaddr, int16_t port) {
   SocketType clientSocket = socket(AF_INET, SOCK_STREAM, 0);
 
   if (clientSocket == Invalid_socket) {
-    logging::error("Error to create a socket.");
+    Logging::error("Error to create a socket.");
     cleanUp();
     return 1;
   }
@@ -138,12 +135,12 @@ SocketType httpRequest::connectTo(const char *ipaddr, int16_t port) {
 
   if (connect(clientSocket, (sockaddr *)&serverAddress,
               sizeof(serverAddress)) == Socket_error) {
-    logging::error("Error connecting to the server.");
+    Logging::error("Error connecting to the server.");
     getLastError();
     closeConnection(clientSocket);
     return -1;
   }
-  logging::success("Socket created.");
+  Logging::log("Socket created.");
   return clientSocket;
 }
 
@@ -154,10 +151,10 @@ int httpRequest::getLastError() {
     char errorBuffer[256];
     if (FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, errorCode, 0,
                       errorBuffer, sizeof(errorBuffer), NULL) != 0) {
-      logging::error("Error in Winsock:\nCode: %d \nMsg:%s", errorCode,
+      Logging::error("Error in Winsock:\nCode: %d \nMsg:%s", errorCode,
                      errorBuffer);
     } else {
-      logging::error(
+      Logging::error(
         "Error in Winsock with Code %d (Not possible get code description).",
         errorCode);
     }

@@ -1,12 +1,12 @@
 #include "chat.hpp"
 
 int main(int argc, char *argv[]) {
-    std::string user_prompt   =     "";  // read from prompts.json
-    std::string chat_template =     "";    //           tempaltes.json
+    std::string user_prompt   =     "";         // read from prompts.json
+    std::string chat_template =     "";         //           tempaltes.json
     std::string param_profile =     "creative"; //           params.json
     bool chat_mode            =     true;
     bool chat_guards          =     true;
-
+    bool debug                =     false;
     const char *ipaddr        =     DEFAULT_IP;
     int16_t port              =     DEFAULT_PORT;
     std::string save_folder_path =  DEFAULT_SAVE_FOLDER;
@@ -34,6 +34,9 @@ int main(int argc, char *argv[]) {
     if ((input_arg = get_arg_value(argc, argv, "--port")) != NULL)
         port = std::stoi(input_arg);
 
+    if ((input_arg = get_arg_value(argc, argv, "--debug")) != NULL)
+        debug = true;
+
     if ((input_arg = get_arg_value(argc, argv, "--help")) != NULL) {
         printCmdHelp();
         exit(0);
@@ -48,6 +51,10 @@ int main(int argc, char *argv[]) {
     chatContext.setChatGuards(chat_guards);
     chatContext.setChatMode(chat_mode);
 
+    // Enable/disable debug
+    if(!debug)
+        Logging::disable_file_logging();
+
     std::string userInput, director_input;
 
     // Load prompt template
@@ -55,7 +62,7 @@ int main(int argc, char *argv[]) {
         chatContext.using_oai_completion = true;
     }else{
         if(!chatContext.loadChatTemplates(chat_template)){
-            logging::error("Failed to load the custom chat template '%s' ! Using default empty.", chat_template.c_str());
+            Logging::error("Failed to load the custom chat template '%s' ! Using default empty.", chat_template.c_str());
             Terminal::pause();
         }
     }
@@ -71,7 +78,7 @@ int main(int argc, char *argv[]) {
 
     // Load params profile
     if(!chatContext.loadParametersSettings(param_profile)){
-        logging::error("Failed to load the param profile '%s' !", param_profile.c_str());
+        Logging::error("Failed to load the param profile '%s' !", param_profile.c_str());
         Terminal::pause();
         exit(1);
     }
@@ -152,12 +159,12 @@ int main(int argc, char *argv[]) {
             // create and talk with a new actor
             } else if (cmd == "/actor" || cmd == "/now" || cmd == "/a") {
                 if(chatContext.using_oai_completion){
-                    logging::error("Not supported with OAI Completion Style");
+                    Logging::error("Not supported with OAI Completion Style");
                     Terminal::pause();
                     continue;
                 }
                 if(arg.empty()){
-                    logging::error("An actor name is required.");
+                    Logging::error("An actor name is required.");
                     Terminal::pause();
                     continue;
                 }
@@ -167,12 +174,12 @@ int main(int argc, char *argv[]) {
             // act like an actor
             } else if (cmd == "/as") {
                 if(chatContext.using_oai_completion){
-                    logging::error("Not supported with OAI Completion Style");
+                    Logging::error("Not supported with OAI Completion Style");
                     Terminal::pause();
                     continue;
                 }
                 if(arg.empty()){
-                    logging::error("An actor name is required.");
+                    Logging::error("An actor name is required.");
                     Terminal::pause();
                     continue;
                 }
@@ -185,7 +192,7 @@ int main(int argc, char *argv[]) {
             // talk to an specific actor
             } else if (cmd == "/talkto") {
                 if(chatContext.using_oai_completion){
-                    logging::error("Not supported with OAI Completion Style");
+                    Logging::error("Not supported with OAI Completion Style");
                     Terminal::pause();
                     continue;
                 }
@@ -198,7 +205,7 @@ int main(int argc, char *argv[]) {
             // lets narrator describes the current context
             } else if (cmd == "/narrator") {
                 if(chatContext.using_oai_completion){
-                    logging::error("Not supported with OAI Completion Style");
+                    Logging::error("Not supported with OAI Completion Style");
                     Terminal::pause();
                     continue;
                 }
@@ -210,7 +217,7 @@ int main(int argc, char *argv[]) {
             // view actors 
             } else if (cmd == "/lactors") {
                 if(chatContext.using_oai_completion){
-                    logging::error("Not supported with OAI Completion Style");
+                    Logging::error("Not supported with OAI Completion Style");
                     Terminal::pause();
                     continue;
                 }
@@ -227,13 +234,13 @@ int main(int argc, char *argv[]) {
                 if(!std::filesystem::exists(save_folder_path))
                     std::filesystem::create_directory(save_folder_path);
 
-                std::string filename = arg.empty()? "/chat_" + getDate(): arg;
+                std::string filename = arg.empty()? "/chat_" + getCurrentDate(): arg;
                 if(arg.find(DEFAULT_FILE_EXTENSION)==std::string::npos) filename+=DEFAULT_FILE_EXTENSION;
 
                 if(chatContext.saveConversation(save_folder_path + filename))
-                    logging::success("Conversation saved as '%s'.", filename.c_str());
+                    Logging::success("Conversation saved as '%s'.", filename.c_str());
                 else
-                    logging::error("Problem saving the conversation.");       
+                    Logging::error("Problem saving the conversation.");       
                 Terminal::pause();
                 continue;
 
@@ -244,9 +251,9 @@ int main(int argc, char *argv[]) {
                 if(arg.find(DEFAULT_FILE_EXTENSION)==std::string::npos) 
                     filename+=DEFAULT_FILE_EXTENSION;
                 if (chatContext.loadSavedConversation(save_folder_path + filename))
-                    logging::success("Conversation from '%s' loaded.", filename.c_str());
+                    Logging::success("Conversation from '%s' loaded.", filename.c_str());
                 else
-                    logging::error("Failed to load conversation!");
+                    Logging::error("Failed to load conversation!");
                 currentActor = chatContext.getAssistantName();
                 Terminal::pause();
                 continue;
@@ -259,13 +266,13 @@ int main(int argc, char *argv[]) {
             } else if (cmd == "/rparams") {
                 chatContext.loadParametersSettings(param_profile);
                 chatContext.setupChatStopWords(); 
-                logging::success("Params '%s' reloaded!", param_profile);Terminal::pause();
+                Logging::success("Params '%s' reloaded!", param_profile.c_str());Terminal::pause();
                 continue;
 
             // reload template
             } else if (cmd == "/rtemplate") {
                 chatContext.loadChatTemplates(chat_template);
-                logging::success("Template '%s' reloaded", chat_template);Terminal::pause();
+                Logging::success("Template '%s' reloaded", chat_template.c_str());Terminal::pause();
                 continue;
 
 
@@ -275,11 +282,11 @@ int main(int argc, char *argv[]) {
             // load prompt template in runtime
             } else if (cmd == "/stemplate") {
                 if(chatContext.loadChatTemplates(arg)){
-                    logging::success("Prompt template '%s' loaded.", arg.c_str());
+                    Logging::success("Prompt template '%s' loaded.", arg.c_str());
                     chat_template = arg;
                     chatContext.using_oai_completion = false;
                 }else{
-                    logging::error("Failed to load template!");
+                    Logging::error("Failed to load template!");
                 }
                 Terminal::pause();
                 continue;
@@ -287,10 +294,10 @@ int main(int argc, char *argv[]) {
             // load prompt template in runtime
             } else if (cmd == "/sprompt") {
                 if(chatContext.loadUserPrompt(arg)){
-                    logging::success("User prompt '%s' loaded.", arg.c_str());
+                    Logging::success("User prompt '%s' loaded.", arg.c_str());
                     user_prompt = arg;
                 }else{
-                    logging::error("Failed to load '%s' user prompt!", arg.c_str());
+                    Logging::error("Failed to load '%s' user prompt!", arg.c_str());
                 }
                 currentActor = chatContext.getAssistantName();
                 Terminal::pause();
@@ -307,10 +314,10 @@ int main(int argc, char *argv[]) {
             } else if (cmd == "/sparam") {
                 if(chatContext.loadParametersSettings(arg)){
                     chatContext.setupChatStopWords(); 
-                    logging::success("Param profile '%s' loaded", arg.c_str());
+                    Logging::success("Param profile '%s' loaded", arg.c_str());
                     param_profile = arg;
                 }else{
-                    logging::error("Failed to load '%s' param profile!", arg.c_str());
+                    Logging::error("Failed to load '%s' param profile!", arg.c_str());
                 }
                 Terminal::pause();
                 continue;
@@ -323,11 +330,11 @@ int main(int argc, char *argv[]) {
                 else if(arg == "off"){
                     chatContext.setChatMode(false);
                 }else{
-                    logging::warn("Invalid argument: '%s'. Expected 'on' or 'off'.", arg.c_str());
+                    Logging::warn("Invalid argument: '%s'. Expected 'on' or 'off'.", arg.c_str());
                     Terminal::pause();
                     continue;
                 }
-                logging::success("Chat mode %s", chatContext.isChatMode()?"ON":"OFF");
+                Logging::success("Chat mode %s", chatContext.isChatMode()?"ON":"OFF");
                 Terminal::pause();
                 continue;
 
@@ -336,18 +343,18 @@ int main(int argc, char *argv[]) {
             /*                           VIEW CONFIGURATION                      */
             /* ----------------------------------------------------------------- */
             // show current prompt
-            } else if (cmd == "/lprompt" || cmd == "/history") {
+            } else if (cmd == "/lprompt") {
                 std::cout << "[Current user prompt]    : " << user_prompt << std::endl;
                 std::cout << "[Current params profile] : " << param_profile << std::endl;
                 std::cout << "[Current chat template]  : " << (chat_template.empty() ? "None": chat_template) << std::endl;
                 std::cout << "[OAI Completion enabled] : " << (chatContext.using_oai_completion?"Yes":"No") << std::endl;
-                std::cout << "\n+Current prompt content:\n" << chatContext.composePrompt() << "\n";
+                std::cout << "\n+Current prompt content:\n\n```\n" << chatContext.composePrompt() << "\n```\n";
                 Terminal::pause();
                 continue;
                 
             // list current parameters
             } else if (cmd == "/lparams") {
-                std::cout << "[Used param profile] : " << param_profile << std::endl;
+                std::cout << "[Current params profile] : " << param_profile << std::endl;
                 std::cout << std::endl << chatContext.dumpPayload(chatContext.getCurrentPrompt()) << "\n\n";
                 Terminal::pause();
                 continue;
@@ -402,7 +409,7 @@ int main(int argc, char *argv[]) {
             
             // ...
             } else {
-                logging::error("Wrong command! Use '/help' for chat commands usage.");
+                Logging::error("Wrong command! Use '/help' for chat commands usage.");
                 Terminal::pause();
                 continue;
             }
@@ -424,10 +431,10 @@ int main(int argc, char *argv[]) {
         Response res = chatContext.requestCompletion(ipaddr, port, chatContext.getCurrentPrompt());
         if (res.Status != HTTP_OK) {
             if (res.Status == HTTP_INTERNAL_ERROR)
-                logging::critical("500 Internal server error!");
+                Logging::critical("500 Internal server error!");
             if (res.Status == -1)
-                logging::error("Error to connect, please check that server is running and try again.");
-            if(!res.body.empty()) logging::error(std::string("\nServer response body:" + res.body).c_str());
+                Logging::error("Error to connect, please check that server is running and try again.");
+            if(!res.body.empty()) Logging::error(std::string("\nServer response body:" + res.body).c_str());
             Terminal::setTitle("Completion in error.");
             Terminal::pause();
             chatContext.removeLastMessage(2);

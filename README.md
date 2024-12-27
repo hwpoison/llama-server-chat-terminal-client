@@ -32,6 +32,7 @@ Chat templates can be added and customized.
 -  --no-chat-guards: Disable the chat guards (default: false)
 -  --ip <ip address>                    (default: 127.0.0.1)
 -  --port <port>                        (default: 8080)
+-  --debug Debug messages into log file (default: false)
 
 #### Command support:
 To input a command, simply insert `/command` followed by the desired command.
@@ -72,7 +73,7 @@ To input a command, simply insert `/command` followed by the desired command.
 - **sprompt (prompt name)** Load and set custom prompt in runtime from prompt.json.
 
 #### 💂About the chat guards:
-The chat guards adds the prompt template tokens into stop words array. Also all the posible variations for the actors chat tags. 
+The chat guards adds the prompt template tokens into stop words array.
 
 #### 🖋️About OpenAI Completion style
 With this mode, chat tags are not supported also messages preffix. The chat template is choiced by the server based on built in model specifications.

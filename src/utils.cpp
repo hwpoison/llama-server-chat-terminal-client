@@ -34,7 +34,7 @@ std::string toLowerCase(std::string_view input) {
     return result;
 }
 
-const std::string getDate() {
+const std::string getCurrentDate() {
     time_t     now = time(0);
     struct tm  tstruct;
     char       buf[80];
@@ -64,7 +64,8 @@ void printCmdHelp(){
     --no-chat-tags Disable chat style actors tags (ex:  'User:' 'Someone:')\n \
     --no-chat-guards (default: true)\n \
     --ip <ip address> (default: 127.0.0.1)\n \
-    --port <port> (default: 8080)" << std::endl;
+    --port <port> (default: 8080)\n \
+    --debug Debug messages into log file (default: false)" << std::endl;
 }
 
 

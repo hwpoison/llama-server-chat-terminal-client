@@ -64,7 +64,7 @@ bool Chat::loadUserPrompt(std::string_view prompt_name) {
     const char* prompt_[] = {prompt_name.data(), "\0"};
     yyjson_val *my_prompt = prompt_file.get_value(prompt_);
     if(my_prompt==NULL){
-        logging::error("Prompt \"%s\" not found.", prompt_name.data());
+        Logging::error("Prompt \"%s\" not found.", prompt_name.data());
         return false;
     }
 
@@ -202,7 +202,7 @@ bool Chat::saveConversation(std::string filename) {
     yyjson_mut_write_file(filename.c_str(), doc, flg, NULL, &err);
     yyjson_mut_doc_free(doc);
     if (err.code) {
-        logging::error("Error writing the file \"%s\": %s", filename.c_str(), err.msg);
+        Logging::error("Error writing the file \"%s\": %s", filename.c_str(), err.msg);
         return false;
     }
     return true;
@@ -212,13 +212,6 @@ void Chat::printActorChaTag(std::string_view actor_name) {
     actor_t actor = actors[actor_name.data()];
     std::cout << actor.icon << " " << ANSIColors::getColorCode(actor.tag_color) << actor.name
               << ANSI_COLOR_RESET << ":";
-}
-
-void Chat::addActorStopWords(std::string actor_name){
-    std::string user_chat_tag = "\n" + actor_name + ":";
-    addStopWord(user_chat_tag);
-    addStopWord(toUpperCase(user_chat_tag));
-    addStopWord(toLowerCase(user_chat_tag));
 }
 
 bool Chat::addActor(
@@ -232,7 +225,6 @@ bool Chat::addActor(
         return false;
     actor_t new_actor = { name, role, tag_color , preffix, icon};
     actors[new_actor.name] = new_actor;
-    if(chat_guards) addActorStopWords(name);
     return true;
 }
 
@@ -261,10 +253,6 @@ void Chat::cureCompletionForChat(){
 // Set all possible variations related to a chat context
 void Chat::setupChatStopWords() {
     if(chat_guards){
-        for (const auto &[key, actor] : actors) {
-            addActorStopWords(actor.name);
-        }
-
         chat_template_t &templates = getChatTemplates(); 
         auto addStop = [this](std::string token) {
             if(token==""){}else{

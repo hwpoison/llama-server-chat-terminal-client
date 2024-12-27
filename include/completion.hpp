@@ -44,8 +44,6 @@ static void completionSignalHandler(int signum) {
     }
 }
 
-
-
 class Completion {
 public:
     Completion(){
@@ -72,7 +70,7 @@ public:
     bool using_oai_completion = false;
 
 private:
-
+    
     httpRequest Req;
 
     chat_template_t chat_template = {"", "\n", "", "\n", "", "\n"};

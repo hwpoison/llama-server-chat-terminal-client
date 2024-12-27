@@ -66,9 +66,7 @@ public:
     bool saveConversation(std::string filename);
 
     void printActorChaTag(std::string_view actor_name);
-
-    void addActorStopWords(std::string actor_name);
-
+    
     bool addActor(std::string name, const char* role, const char* tag_color, std::string preffix = "", std::string icon = "");
 
     std::string& getUserName();

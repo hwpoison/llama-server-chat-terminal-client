@@ -14,7 +14,7 @@ std::string toUpperCase(std::string_view input);
 
 std::string toLowerCase(std::string_view input);
 
-const std::string getDate();
+const std::string getCurrentDate();
 
 int64_t getTimeStamp();
 

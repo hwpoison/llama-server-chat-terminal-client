@@ -4,8 +4,11 @@ bool stopCompletionFlag = false;
 bool completionInProgress = false;
 
 bool Completion::completionCallback(const std::string &chunk, const CallbackBus *bus) {
+    if(completionInProgress){
+        Terminal::setTitle("Completing...");
+    }
     if (stopCompletionFlag) {
-        Terminal::setTitle("Completion interrupted by user");
+        Terminal::setTitle("Interrupted by user");
         stopCompletionFlag = false;
         completionInProgress = false;
         return false; //callback will return False so streaming will stop.
@@ -21,6 +24,8 @@ bool Completion::completionCallback(const std::string &chunk, const CallbackBus 
         size_t contentKeyPos = chunk.find("\"content\":");
         if (contentKeyPos == std::string::npos) return true;
     }
+    
+    Logging::log("Received data: %s", completionData.c_str());
     
     // Parse the data
     yyjson_doc *doc = yyjson_read(completionData.c_str(), strlen(completionData.c_str()), 0);
@@ -208,7 +213,6 @@ std::string Completion::dumpPayload(yyjson_mut_doc* prompt_json) {
     yyjson_mut_doc_free(doc);
     free(const_cast<char*>(json));
 
-    logging::log("%s", result.c_str());;
     return result;
 }
 
@@ -216,11 +220,14 @@ Response Completion::requestCompletion(
     const char* ipaddr, const int16_t port, yyjson_mut_doc* prompt_json) 
 {
     completionInProgress = true;
+    std::string send_json = dumpPayload(prompt_json);
+    Logging::log("Sending: %s", send_json.c_str());
+
     return Req.post(
         ipaddr, 
         port, 
         using_oai_completion?OAI_COMPLETION_ENDPOINT:COMPLETION_ENDPOINT, 
-        dumpPayload(prompt_json), 
+        send_json,
         [this](std::string response, const CallbackBus* bus) -> bool {
             return this->completionCallback(response, bus);
         }, 

@@ -115,6 +115,16 @@
 				"E_ASSISTANT": 	"<|eot_id|>\n"
 				
 			}
+		},
+		"phi3.5":{
+			"SEQ":{
+				"B_SYS":"<|im_start|>",
+				"E_SYS":"<|im_end|>",
+				"B_USER":"<|im_start|>user",
+				"E_USER":"<|im_end|>",
+				"B_ASSISTANT":"<|im_start|>assistant",
+				"E_ASSISTANT":"<|im_end|>",
+			}
 		}
 	}
 }

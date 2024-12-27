@@ -36,7 +36,7 @@ struct Response {
 };
 
 struct CallbackBus {
-  virtual ~CallbackBus() = default; // Destructor virtual para polimorfismo
+  virtual ~CallbackBus() = default;
   std::string buffer;
   bool stream;
 };
@@ -51,8 +51,7 @@ public:
                 json payload,
                 const std::function<bool(std::string chunck, const CallbackBus *bus)> &reader_callback, 
                 const CallbackBus *bus);  
-  
-  bool debug = false;
+
   SocketType  connectTo(const char* ipaddr, int16_t port);
   bool        sendData(SocketType connection, const char* data);
   bool        closeConnection(SocketType connection);
